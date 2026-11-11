@@ -6,13 +6,14 @@ import { useApi } from "../lib/hooks";
 import { Link, useQueryState } from "../lib/router";
 import { BarList, ElevationChart, HourStrip } from "./charts";
 import { ErrorNote, Segmented, Sign } from "./ui";
+import { t } from "../lib/i18n";
 
 export const RANGES = {
-  "24h": { label: "24 h", ms: 864e5 },
-  "7d": { label: "7 days", ms: 7 * 864e5 },
-  "30d": { label: "30 days", ms: 30 * 864e5 },
-  "90d": { label: "90 days", ms: 90 * 864e5 },
-  "365d": { label: "12 months", ms: 365 * 864e5 },
+  "24h": { label: t("24 h"), ms: 864e5 },
+  "7d": { label: t("7 days"), ms: 7 * 864e5 },
+  "30d": { label: t("30 days"), ms: 30 * 864e5 },
+  "90d": { label: t("90 days"), ms: 90 * 864e5 },
+  "365d": { label: t("12 months"), ms: 365 * 864e5 },
 } as const;
 export type RangeKey = keyof typeof RANGES;
 
@@ -23,7 +24,14 @@ export function useRange() {
 }
 
 export function RangePicker({ value, onChange }: { value: RangeKey; onChange: (r: RangeKey) => void }) {
-  return <Segmented label="Time range" value={value} onChange={onChange} options={(Object.keys(RANGES) as RangeKey[]).map((k) => ({ value: k, label: RANGES[k].label }))} />;
+  return (
+    <Segmented
+      label={t("Time range")}
+      value={value}
+      onChange={onChange}
+      options={(Object.keys(RANGES) as RangeKey[]).map((k) => ({ value: k, label: RANGES[k].label }))}
+    />
+  );
 }
 
 function Breakdown({ title, children, aside }: { title: string; children: React.ReactNode; aside?: React.ReactNode }) {
@@ -38,7 +46,12 @@ function Breakdown({ title, children, aside }: { title: string; children: React.
   );
 }
 
-const TARGET_LABEL = (k: string | null) => (k === "main" || !k ? "Main destination" : k.startsWith("rule:") ? `Rule ${Number(k.slice(5)) + 1}` : `Variant ${Number(k.slice(8)) + 1}`);
+const TARGET_LABEL = (k: string | null) =>
+  k === "main" || !k
+    ? t("Main destination")
+    : k.startsWith("rule:")
+      ? t("Rule {n}", { n: Number(k.slice(5)) + 1 })
+      : t("Variant {n}", { n: Number(k.slice(8)) + 1 });
 
 export function AnalyticsView({ linkId, range, showTop, showTargets }: { linkId?: string; range: RangeKey; showTop?: boolean; showTargets?: boolean }) {
   const [tech, setTech] = useState<"devices" | "os" | "browsers">("devices");
@@ -63,35 +76,35 @@ export function AnalyticsView({ linkId, range, showTop, showTargets }: { linkId?
             <div className="readout">
               <div className="r">
                 <b>{a ? num(a.totals.clicks) : "—"}</b>
-                <span>Clicks</span>
+                <span>{t("Clicks")}</span>
               </div>
               <div className="r">
                 <b>{a ? num(a.totals.visitors) : "—"}</b>
-                <span>Unique visitors</span>
+                <span>{t("Unique visitors")}</span>
               </div>
               <div className="r small">
                 <b>{a ? num(a.totals.qr) : "—"}</b>
-                <span>QR scans</span>
+                <span>{t("QR scans")}</span>
               </div>
             </div>
             <a className="btn sm ghost" href={dl} download>
-              <Download className="icon" /> CSV
+              <Download className="icon" /> {t("CSV")}
             </a>
           </div>
           {a ? <ElevationChart series={a.series} bucket={a.bucket} /> : <div className="skeleton" style={{ height: 220 }} />}
           <div className="row faint" style={{ fontSize: 12, gap: 16, marginTop: 6 }}>
             <span className="row" style={{ gap: 6 }}>
-              <span style={{ width: 14, height: 8, background: "var(--chart-fill)", borderTop: "2px solid var(--chart-line)" }} /> Clicks
+              <span style={{ width: 14, height: 8, background: "var(--chart-fill)", borderTop: "2px solid var(--chart-line)" }} /> {t("Clicks")}
             </span>
             <span className="row" style={{ gap: 6 }}>
-              <span style={{ width: 14, borderTop: "1.5px dashed var(--ink-3)" }} /> Unique visitors
+              <span style={{ width: 14, borderTop: "1.5px dashed var(--ink-3)" }} /> {t("Unique visitors")}
             </span>
           </div>
         </div>
       </section>
 
       {showTop && (
-        <Breakdown title="Most visited links">
+        <Breakdown title={t("Most visited links")}>
           {a ? (
             a.top_links.length ? (
               <div className="barlist">
@@ -101,7 +114,9 @@ export function AnalyticsView({ linkId, range, showTop, showTargets }: { linkId?
                     <Link key={t.id} to={`/links/${t.id}`} className="item" style={{ ["--w" as string]: `${(t.clicks / max) * 100}%`, textDecoration: "none" }}>
                       <span className="k">
                         <Sign slug={t.slug ?? "deleted"} muted={!t.slug} />
-                        <span className="muted" style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{t.title || t.url}</span>
+                        <span className="muted" style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {t.title || t.url}
+                        </span>
                       </span>
                       <span className="v">{num(t.clicks)}</span>
                     </Link>
@@ -109,7 +124,9 @@ export function AnalyticsView({ linkId, range, showTop, showTargets }: { linkId?
                 })}
               </div>
             ) : (
-              <p className="faint" style={{ fontSize: 13 }}>No clicks in this period yet.</p>
+              <p className="faint" style={{ fontSize: 13 }}>
+                {t("No clicks in this period yet.")}
+              </p>
             )
           ) : (
             <div className="skeleton" style={{ height: 120 }} />
@@ -119,8 +136,18 @@ export function AnalyticsView({ linkId, range, showTop, showTargets }: { linkId?
 
       <div className="cards-2">
         <Breakdown
-          title="Where"
-          aside={<Segmented label="Place" value={place} onChange={setPlace} options={[{ value: "countries", label: "Countries" }, { value: "cities", label: "Cities" }]} />}
+          title={t("Where")}
+          aside={
+            <Segmented
+              label={t("Place")}
+              value={place}
+              onChange={setPlace}
+              options={[
+                { value: "countries", label: t("Countries") },
+                { value: "cities", label: t("Cities") },
+              ]}
+            />
+          }
         >
           {a &&
             (place === "countries" ? (
@@ -145,33 +172,31 @@ export function AnalyticsView({ linkId, range, showTop, showTargets }: { linkId?
                     </>
                   );
                 }}
-                empty="City data needs Cloudflare or a proxy that sends city headers."
+                empty={t("City data needs Cloudflare or a proxy that sends city headers.")}
               />
             ))}
         </Breakdown>
-        <Breakdown title="Came from">
-          {a && <BarList items={a.referrers} render={(k) => k ?? "Direct, apps & QR"} />}
-        </Breakdown>
+        <Breakdown title={t("Came from")}>{a && <BarList items={a.referrers} render={(k) => k ?? t("Direct, apps & QR")} />}</Breakdown>
         <Breakdown
-          title="Technology"
+          title={t("Technology")}
           aside={
             <Segmented
-              label="Technology"
+              label={t("Technology")}
               value={tech}
               onChange={setTech}
               options={[
-                { value: "devices", label: "Device" },
+                { value: "devices", label: t("Device") },
                 { value: "os", label: "OS" },
-                { value: "browsers", label: "Browser" },
+                { value: "browsers", label: t("Browser") },
               ]}
             />
           }
         >
-          {a && <BarList items={a[tech]} render={(k) => (k ? k[0].toUpperCase() + k.slice(1) : "Unknown")} />}
+          {a && <BarList items={a[tech]} render={(k) => (k ? t(k[0].toUpperCase() + k.slice(1)) : t("Unknown"))} />}
         </Breakdown>
-        <Breakdown title="Languages">{a && <BarList items={a.languages} render={(k) => language(k)} />}</Breakdown>
-        <Breakdown title="Time of day">{a && <HourStrip hourly={a.hourly} />}</Breakdown>
-        {showTargets && <Breakdown title="Routes taken">{a && <BarList items={a.targets} render={TARGET_LABEL} />}</Breakdown>}
+        <Breakdown title={t("Languages")}>{a && <BarList items={a.languages} render={(k) => language(k)} />}</Breakdown>
+        <Breakdown title={t("Time of day")}>{a && <HourStrip hourly={a.hourly} />}</Breakdown>
+        {showTargets && <Breakdown title={t("Routes taken")}>{a && <BarList items={a.targets} render={TARGET_LABEL} />}</Breakdown>}
       </div>
     </div>
   );

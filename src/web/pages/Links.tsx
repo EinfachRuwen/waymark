@@ -1,4 +1,19 @@
-import { Archive, ArchiveRestore, ArrowDown, ArrowRight, ArrowUp, Copy, Lock, MoreHorizontal, Pencil, Plus, QrCode, Search, Tag as TagIcon, Trash2 } from "lucide-react";
+import {
+  Archive,
+  ArchiveRestore,
+  ArrowDown,
+  ArrowRight,
+  ArrowUp,
+  Copy,
+  Lock,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  QrCode,
+  Search,
+  Tag as TagIcon,
+  Trash2,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { PageHead } from "../App";
 import { Button, CopyButton, Dialog, Empty, ErrorNote, Input, Menu, Sign, SkeletonRows, useConfirm, useToast } from "../components/ui";
@@ -9,6 +24,7 @@ import { useQueryState, useRouter } from "../lib/router";
 import { useSession } from "../lib/session";
 import { LinkEditor } from "./LinkEditor";
 import { QrDialog } from "./QrDialog";
+import { t, tn } from "../lib/i18n";
 
 const PAGE = 50;
 
@@ -48,19 +64,29 @@ export function Links() {
   const rows = data?.data ?? [];
   const allSelected = rows.length > 0 && rows.every((r) => selected.has(r.id));
   const toggleAll = () => setSelected(allSelected ? new Set() : new Set(rows.map((r) => r.id)));
-  const toggle = (id: string) => setSelected((s) => {
-    const n = new Set(s);
-    if (n.has(id)) n.delete(id);
-    else n.add(id);
-    return n;
-  });
+  const toggle = (id: string) =>
+    setSelected((s) => {
+      const n = new Set(s);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
 
   async function bulk(action: string, extra: Record<string, unknown> = {}) {
     const ids = [...selected];
-    if (action === "delete" && !(await confirm({ title: `Delete ${ids.length} link${ids.length === 1 ? "" : "s"}?`, body: "Their click history is deleted too. Visitors will see a not-found page.", confirm: "Delete", danger: true }))) return;
+    if (
+      action === "delete" &&
+      !(await confirm({
+        title: tn(ids.length, "Delete {n} link?", "Delete {n} links?"),
+        body: t("Their click history is deleted too. Visitors will see a not-found page."),
+        confirm: t("Delete"),
+        danger: true,
+      }))
+    )
+      return;
     try {
       const r = await api<{ affected: number }>("/links/actions", { body: { ids, action, ...extra } });
-      toast(`${num(r.affected)} link${r.affected === 1 ? "" : "s"} updated`);
+      toast(tn(r.affected, "{n} link updated", "{n} links updated"));
       setSelected(new Set());
       bumpLinks();
       void reload();
@@ -70,11 +96,20 @@ export function Links() {
   }
 
   async function one(l: LinkT, action: "archive" | "unarchive" | "delete") {
-    if (action === "delete" && !(await confirm({ title: `Delete ${l.domain}/${l.slug}?`, body: "Its click history is deleted too. This cannot be undone.", confirm: "Delete link", danger: true }))) return;
+    if (
+      action === "delete" &&
+      !(await confirm({
+        title: t("Delete {link}?", { link: `${l.domain}/${l.slug}` }),
+        body: t("Its click history is deleted too. This cannot be undone."),
+        confirm: t("Delete link"),
+        danger: true,
+      }))
+    )
+      return;
     try {
       if (action === "delete") await api(`/links/${l.id}`, { method: "DELETE" });
       else await api(`/links/${l.id}`, { method: "PATCH", body: { archived: action === "archive" } });
-      toast(action === "delete" ? "Link deleted" : action === "archive" ? "Link archived" : "Link restored");
+      toast(action === "delete" ? t("Link deleted") : action === "archive" ? t("Link archived") : t("Link restored"));
       bumpLinks();
     } catch (e) {
       toast((e as Error).message, "error");
@@ -89,7 +124,8 @@ export function Links() {
     }
     setPage(0);
   };
-  const SortIcon = ({ k }: { k: string }) => (sort === k ? order === "desc" ? <ArrowDown className="icon" style={{ width: 12 }} /> : <ArrowUp className="icon" style={{ width: 12 }} /> : null);
+  const SortIcon = ({ k }: { k: string }) =>
+    sort === k ? order === "desc" ? <ArrowDown className="icon" style={{ width: 12 }} /> : <ArrowUp className="icon" style={{ width: 12 }} /> : null;
 
   const filtered = !!(q || tag || domain || status !== "active");
   const total = data?.total ?? 0;
@@ -97,58 +133,146 @@ export function Links() {
   return (
     <div className="page">
       <PageHead
-        title="Links"
-        desc={data ? `${num(total)} ${status === "archived" ? "archived" : status === "expired" ? "expired" : status === "all" ? "total" : "active"} link${total === 1 ? "" : "s"}` : " "}
-        actions={can("links:write") && <Button className="hide-sm" variant="primary" icon={<Plus className="icon" />} onClick={() => setCreating(true)}>New link</Button>}
+        title={t("Links")}
+        desc={
+          data
+            ? status === "archived"
+              ? tn(total, "{n} archived link", "{n} archived links")
+              : status === "expired"
+                ? tn(total, "{n} expired link", "{n} expired links")
+                : status === "all" || status === "any"
+                  ? tn(total, "{n} link", "{n} links")
+                  : status === "protected"
+                    ? tn(total, "{n} protected link", "{n} protected links")
+                    : tn(total, "{n} active link", "{n} active links")
+            : " "
+        }
+        actions={
+          can("links:write") && (
+            <Button className="hide-sm" variant="primary" icon={<Plus className="icon" />} onClick={() => setCreating(true)}>
+              {t("New link")}
+            </Button>
+          )
+        }
       />
 
       <div className="panel">
         {selected.size > 0 ? (
           <div className="bulkbar">
-            <b style={{ marginRight: 8 }}>{selected.size} selected</b>
+            <b style={{ marginRight: 8 }}>{t("{n} selected", { n: selected.size })}</b>
             {can("links:write") && (
               <>
-                <Button size="sm" icon={<TagIcon className="icon" />} onClick={() => setTagDialog("add_tags")}>Add tags</Button>
-                <Button size="sm" onClick={() => setTagDialog("remove_tags")}>Remove tags</Button>
+                <Button size="sm" icon={<TagIcon className="icon" />} onClick={() => setTagDialog("add_tags")}>
+                  {t("Add tags")}
+                </Button>
+                <Button size="sm" onClick={() => setTagDialog("remove_tags")}>
+                  {t("Remove tags")}
+                </Button>
                 {status === "archived" ? (
-                  <Button size="sm" icon={<ArchiveRestore className="icon" />} onClick={() => bulk("unarchive")}>Restore</Button>
+                  <Button size="sm" icon={<ArchiveRestore className="icon" />} onClick={() => bulk("unarchive")}>
+                    {t("Restore")}
+                  </Button>
                 ) : (
-                  <Button size="sm" icon={<Archive className="icon" />} onClick={() => bulk("archive")}>Archive</Button>
+                  <Button size="sm" icon={<Archive className="icon" />} onClick={() => bulk("archive")}>
+                    {t("Archive")}
+                  </Button>
                 )}
               </>
             )}
-            <Button size="sm" icon={<Copy className="icon" />} onClick={async () => {
-              await copy(rows.filter((r) => selected.has(r.id)).map((r) => r.short_url).join("\n"));
-              toast("Short links copied");
-            }}>Copy URLs</Button>
-            {can("links:delete") && <Button size="sm" icon={<Trash2 className="icon" />} onClick={() => bulk("delete")}>Delete</Button>}
+            <Button
+              size="sm"
+              icon={<Copy className="icon" />}
+              onClick={async () => {
+                await copy(
+                  rows
+                    .filter((r) => selected.has(r.id))
+                    .map((r) => r.short_url)
+                    .join("\n"),
+                );
+                toast(t("Short links copied"));
+              }}
+            >
+              {t("Copy URLs")}
+            </Button>
+            {can("links:delete") && (
+              <Button size="sm" icon={<Trash2 className="icon" />} onClick={() => bulk("delete")}>
+                {t("Delete")}
+              </Button>
+            )}
             <span style={{ flex: 1 }} />
-            <Button size="sm" onClick={() => setSelected(new Set())}>Clear</Button>
+            <Button size="sm" onClick={() => setSelected(new Set())}>
+              {t("Clear")}
+            </Button>
           </div>
         ) : (
           <div className="toolbar">
             <div className="input-with-icon grow">
               <Search className="icon" />
-              <input id="link-search" className="input" placeholder="Search slug, destination, title, notes" value={search} onChange={(e) => { setSearch(e.target.value); setPage(0); }} aria-label="Search links" />
+              <input
+                id="link-search"
+                className="input"
+                placeholder={t("Search slug, destination, title, notes")}
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(0);
+                }}
+                aria-label={t("Search links")}
+              />
             </div>
-            <select className="select" style={{ width: "auto" }} value={status} onChange={(e) => { setStatus(e.target.value); setPage(0); }} aria-label="Status">
-              <option value="active">Active</option>
-              <option value="expired">Expired</option>
-              <option value="protected">Password protected</option>
-              <option value="archived">Archived</option>
-              <option value="any">All but archived</option>
-              <option value="all">All</option>
+            <select
+              className="select"
+              style={{ width: "auto" }}
+              value={status}
+              onChange={(e) => {
+                setStatus(e.target.value);
+                setPage(0);
+              }}
+              aria-label={t("Status")}
+            >
+              <option value="active">{t("Active")}</option>
+              <option value="expired">{t("Expired")}</option>
+              <option value="protected">{t("Password protected")}</option>
+              <option value="archived">{t("Archived")}</option>
+              <option value="any">{t("All but archived")}</option>
+              <option value="all">{t("All")}</option>
             </select>
             {(tags.data?.data.length ?? 0) > 0 && (
-              <select className="select" style={{ width: "auto", maxWidth: 180 }} value={tag} onChange={(e) => { setTag(e.target.value); setPage(0); }} aria-label="Tag">
-                <option value="">All tags</option>
-                {tags.data!.data.map((t) => <option key={t.name} value={t.name}>{t.name}</option>)}
+              <select
+                className="select"
+                style={{ width: "auto", maxWidth: 180 }}
+                value={tag}
+                onChange={(e) => {
+                  setTag(e.target.value);
+                  setPage(0);
+                }}
+                aria-label={t("Tag")}
+              >
+                <option value="">{t("All tags")}</option>
+                {tags.data!.data.map((t) => (
+                  <option key={t.name} value={t.name}>
+                    {t.name}
+                  </option>
+                ))}
               </select>
             )}
             {domains.length > 1 && (
-              <select className="select" style={{ width: "auto", maxWidth: 200 }} value={domain} onChange={(e) => { setDomain(e.target.value); setPage(0); }} aria-label="Domain">
-                <option value="">All domains</option>
-                {domains.map((d) => <option key={d.id} value={d.hostname}>{d.hostname}</option>)}
+              <select
+                className="select"
+                style={{ width: "auto", maxWidth: 200 }}
+                value={domain}
+                onChange={(e) => {
+                  setDomain(e.target.value);
+                  setPage(0);
+                }}
+                aria-label={t("Domain")}
+              >
+                <option value="">{t("All domains")}</option>
+                {domains.map((d) => (
+                  <option key={d.id} value={d.hostname}>
+                    {d.hostname}
+                  </option>
+                ))}
               </select>
             )}
           </div>
@@ -159,12 +283,33 @@ export function Links() {
             <thead>
               <tr>
                 <th style={{ width: 36 }}>
-                  <input type="checkbox" className="box" checked={allSelected} ref={(el) => { if (el) el.indeterminate = !allSelected && rows.some((r) => selected.has(r.id)); }} onChange={toggleAll} aria-label="Select all on this page" />
+                  <input
+                    type="checkbox"
+                    className="box"
+                    checked={allSelected}
+                    ref={(el) => {
+                      if (el) el.indeterminate = !allSelected && rows.some((r) => selected.has(r.id));
+                    }}
+                    onChange={toggleAll}
+                    aria-label={t("Select all on this page")}
+                  />
                 </th>
-                <th><button onClick={() => sortBy("slug")}>Short link <SortIcon k="slug" /></button></th>
-                <th className="hide-sm">Tags</th>
-                <th className="right"><button onClick={() => sortBy("clicks")}>Clicks <SortIcon k="clicks" /></button></th>
-                <th className="right hide-sm"><button onClick={() => sortBy("created")}>Created <SortIcon k="created" /></button></th>
+                <th>
+                  <button onClick={() => sortBy("slug")}>
+                    {t("Short link")} <SortIcon k="slug" />
+                  </button>
+                </th>
+                <th className="hide-sm">{t("Tags")}</th>
+                <th className="right">
+                  <button onClick={() => sortBy("clicks")}>
+                    {t("Clicks")} <SortIcon k="clicks" />
+                  </button>
+                </th>
+                <th className="right hide-sm">
+                  <button onClick={() => sortBy("created")}>
+                    {t("Created")} <SortIcon k="created" />
+                  </button>
+                </th>
                 <th style={{ width: 120 }} />
               </tr>
             </thead>
@@ -183,21 +328,49 @@ export function Links() {
                         <div className="stack-sm" style={{ gap: 5 }}>
                           <div className="trail">
                             <Sign host={domains.length > 1 ? l.domain : null} slug={l.slug} muted={l.status !== "active"} />
-                            {l.has_password && <Lock className="icon faint" aria-label="Password protected" />}
-                            {l.status !== "active" && <span className={`chip ${l.status === "expired" ? "ember" : l.status === "scheduled" ? "sky" : ""}`}>{l.status}</span>}
-                            {l.rules.length + l.variants.length > 0 && <span className="chip slate">{l.rules.length + l.variants.length} route{l.rules.length + l.variants.length === 1 ? "" : "s"}</span>}
+                            {l.has_password && <Lock className="icon faint" aria-label={t("Password protected")} />}
+                            {l.status !== "active" && (
+                              <span className={`chip ${l.status === "expired" ? "ember" : l.status === "scheduled" ? "sky" : ""}`}>{t(l.status)}</span>
+                            )}
+                            {l.rules.length + l.variants.length > 0 && (
+                              <span className="chip slate">{tn(l.rules.length + l.variants.length, "{n} route", "{n} routes")}</span>
+                            )}
                           </div>
                           <div className="trail" style={{ gap: 6 }}>
                             <ArrowRight className="icon faint" style={{ width: 13 }} />
-                            <span className="dest"><b>{d.host}</b>{d.rest}</span>
+                            <span className="dest">
+                              <b>{d.host}</b>
+                              {d.rest}
+                            </span>
                           </div>
-                          {l.title && <div className="muted" style={{ fontSize: 12.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.title}</div>}
+                          {l.title && (
+                            <div className="muted" style={{ fontSize: 12.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                              {l.title}
+                            </div>
+                          )}
                         </div>
                       </td>
                       <td className="hide-sm">
                         <div className="tags">
                           {l.tags.map((t) => (
-                            <button key={t} className="tag" style={{ ["--c" as string]: tagColor.get(t.toLowerCase()), background: "none", border: 0, padding: 0, cursor: "pointer", font: "inherit", fontSize: 12 }} onClick={(e) => { e.stopPropagation(); setTag(t); setPage(0); }}>
+                            <button
+                              key={t}
+                              className="tag"
+                              style={{
+                                ["--c" as string]: tagColor.get(t.toLowerCase()),
+                                background: "none",
+                                border: 0,
+                                padding: 0,
+                                cursor: "pointer",
+                                font: "inherit",
+                                fontSize: 12,
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setTag(t);
+                                setPage(0);
+                              }}
+                            >
                               {t}
                             </button>
                           ))}
@@ -205,26 +378,103 @@ export function Links() {
                       </td>
                       <td className="right num">
                         <b style={{ fontWeight: 600 }}>{num(l.clicks)}</b>
-                        <div className="faint" style={{ fontSize: 12, whiteSpace: "nowrap" }}>{l.last_click_at ? ago(l.last_click_at) : "no clicks"}</div>
+                        <div className="faint" style={{ fontSize: 12, whiteSpace: "nowrap" }}>
+                          {l.last_click_at ? ago(l.last_click_at) : t("no clicks")}
+                        </div>
                       </td>
-                      <td className="right hide-sm faint num" style={{ whiteSpace: "nowrap", fontSize: 12.5 }}>{ago(l.created_at)}</td>
+                      <td className="right hide-sm faint num" style={{ whiteSpace: "nowrap", fontSize: 12.5 }}>
+                        {ago(l.created_at)}
+                      </td>
                       <td onClick={(e) => e.stopPropagation()}>
                         <div className="row-actions">
-                          <span className="hide-sm">{l.short_url && <CopyButton text={l.short_url} iconOnly label="Copy short link" />}</span>
-                          <Button className="hide-sm" size="sm" variant="ghost" icon={<QrCode className="icon" />} aria-label="QR code" title="QR code" onClick={() => setQr(l)} />
-                          <Menu trigger={(p) => <Button size="sm" variant="ghost" icon={<MoreHorizontal className="icon" />} aria-label="More actions" {...p} />}>
+                          <span className="hide-sm">{l.short_url && <CopyButton text={l.short_url} iconOnly label={t("Copy short link")} />}</span>
+                          <Button
+                            className="hide-sm"
+                            size="sm"
+                            variant="ghost"
+                            icon={<QrCode className="icon" />}
+                            aria-label={t("QR code")}
+                            title={t("QR code")}
+                            onClick={() => setQr(l)}
+                          />
+                          <Menu
+                            trigger={(p) => (
+                              <Button size="sm" variant="ghost" icon={<MoreHorizontal className="icon" />} aria-label={t("More actions")} {...p} />
+                            )}
+                          >
                             {(close) => (
                               <>
-                                {l.short_url && <button onClick={async () => { close(); await copy(l.short_url!); toast("Copied to clipboard"); }}><Copy className="icon" /> Copy short link</button>}
-                                <button onClick={() => { close(); setQr(l); }}><QrCode className="icon" /> QR code</button>
-                                {can("links:write") && <button onClick={() => { close(); setEditing(l); }}><Pencil className="icon" /> Edit</button>}
-                                <button onClick={() => { close(); window.open(l.url, "_blank", "noopener"); }}><ArrowRight className="icon" /> Open destination</button>
-                                {can("links:write") && (l.archived ? (
-                                  <button onClick={() => { close(); void one(l, "unarchive"); }}><ArchiveRestore className="icon" /> Restore</button>
-                                ) : (
-                                  <button onClick={() => { close(); void one(l, "archive"); }}><Archive className="icon" /> Archive</button>
-                                ))}
-                                {can("links:delete") && (<><hr /><button className="danger" onClick={() => { close(); void one(l, "delete"); }}><Trash2 className="icon" /> Delete</button></>)}
+                                {l.short_url && (
+                                  <button
+                                    onClick={async () => {
+                                      close();
+                                      await copy(l.short_url!);
+                                      toast(t("Copied to clipboard"));
+                                    }}
+                                  >
+                                    <Copy className="icon" /> {t("Copy short link")}
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => {
+                                    close();
+                                    setQr(l);
+                                  }}
+                                >
+                                  <QrCode className="icon" /> {t("QR code")}
+                                </button>
+                                {can("links:write") && (
+                                  <button
+                                    onClick={() => {
+                                      close();
+                                      setEditing(l);
+                                    }}
+                                  >
+                                    <Pencil className="icon" /> {t("Edit")}
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => {
+                                    close();
+                                    window.open(l.url, "_blank", "noopener");
+                                  }}
+                                >
+                                  <ArrowRight className="icon" /> {t("Open destination")}
+                                </button>
+                                {can("links:write") &&
+                                  (l.archived ? (
+                                    <button
+                                      onClick={() => {
+                                        close();
+                                        void one(l, "unarchive");
+                                      }}
+                                    >
+                                      <ArchiveRestore className="icon" /> {t("Restore")}
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={() => {
+                                        close();
+                                        void one(l, "archive");
+                                      }}
+                                    >
+                                      <Archive className="icon" /> {t("Archive")}
+                                    </button>
+                                  ))}
+                                {can("links:delete") && (
+                                  <>
+                                    <hr />
+                                    <button
+                                      className="danger"
+                                      onClick={() => {
+                                        close();
+                                        void one(l, "delete");
+                                      }}
+                                    >
+                                      <Trash2 className="icon" /> {t("Delete")}
+                                    </button>
+                                  </>
+                                )}
                               </>
                             )}
                           </Menu>
@@ -239,24 +489,50 @@ export function Links() {
         </div>
 
         {error && <ErrorNote error={error} retry={reload} />}
-        {data && !rows.length && (
-          filtered ? (
-            <Empty sign="no match" title="No links match these filters.">
-              <Button size="sm" onClick={() => { setSearch(""); setQ(""); setTag(""); setDomain(""); setStatus("active"); }}>Clear filters</Button>
+        {data &&
+          !rows.length &&
+          (filtered ? (
+            <Empty sign={t("no match")} title={t("No links match these filters.")}>
+              <Button
+                size="sm"
+                onClick={() => {
+                  setSearch("");
+                  setQ("");
+                  setTag("");
+                  setDomain("");
+                  setStatus("active");
+                }}
+              >
+                {t("Clear filters")}
+              </Button>
             </Empty>
           ) : (
-            <Empty sign="first-link" title="No links yet." action={can("links:write") && <Button variant="primary" icon={<Plus className="icon" />} onClick={() => setCreating(true)}>Create your first link</Button>}>
-              Short links you create appear here with their clicks. Press <kbd>N</kbd> anywhere to make one, or bring links over from Short.io, Bitly or a CSV under Import & export.
+            <Empty
+              sign={t("first-link")}
+              title={t("No links yet.")}
+              action={
+                can("links:write") && (
+                  <Button variant="primary" icon={<Plus className="icon" />} onClick={() => setCreating(true)}>
+                    {t("Create your first link")}
+                  </Button>
+                )
+              }
+            >
+              {t("Short links you create appear here with their clicks. Press")} <kbd>N</kbd>{" "}
+              {t("anywhere to make one, or bring links over from Short.io, Bitly or a CSV under Import & export.")}
             </Empty>
-          )
-        )}
+          ))}
 
         {total > PAGE && (
           <div className="pager">
-            <span className="num">{num(page * PAGE + 1)}–{num(Math.min(total, (page + 1) * PAGE))} of {num(total)}</span>
+            <span className="num">{t("{a}–{b} of {total}", { a: num(page * PAGE + 1), b: num(Math.min(total, (page + 1) * PAGE)), total: num(total) })}</span>
             <div className="row">
-              <Button size="sm" disabled={page === 0} onClick={() => setPage(page - 1)}>Previous</Button>
-              <Button size="sm" disabled={(page + 1) * PAGE >= total} onClick={() => setPage(page + 1)}>Next</Button>
+              <Button size="sm" disabled={page === 0} onClick={() => setPage(page - 1)}>
+                {t("Previous")}
+              </Button>
+              <Button size="sm" disabled={(page + 1) * PAGE >= total} onClick={() => setPage(page + 1)}>
+                {t("Next")}
+              </Button>
             </div>
           </div>
         )}
@@ -265,7 +541,10 @@ export function Links() {
       {(creating || editing) && (
         <LinkEditor
           link={editing ?? undefined}
-          onClose={() => { setCreating(false); setEditing(null); }}
+          onClose={() => {
+            setCreating(false);
+            setEditing(null);
+          }}
           onSaved={(l) => {
             const wasNew = creating;
             setCreating(false);
@@ -276,22 +555,47 @@ export function Links() {
         />
       )}
       {qr && <QrDialog link={qr} onClose={() => setQr(null)} />}
-      {tagDialog && <TagBulkDialog mode={tagDialog} onClose={() => setTagDialog(null)} onApply={(t) => { setTagDialog(null); void bulk(tagDialog, { tags: t }); }} />}
+      {tagDialog && (
+        <TagBulkDialog
+          mode={tagDialog}
+          onClose={() => setTagDialog(null)}
+          onApply={(t) => {
+            setTagDialog(null);
+            void bulk(tagDialog, { tags: t });
+          }}
+        />
+      )}
     </div>
   );
 }
 
 function TagBulkDialog({ mode, onClose, onApply }: { mode: "add_tags" | "remove_tags"; onClose: () => void; onApply: (tags: string[]) => void }) {
   const [v, setV] = useState("");
-  const tags = v.split(",").map((t) => t.trim()).filter(Boolean);
+  const tags = v
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
   return (
     <Dialog
-      title={mode === "add_tags" ? "Add tags" : "Remove tags"}
+      title={mode === "add_tags" ? t("Add tags") : t("Remove tags")}
       onClose={onClose}
-      footer={<><Button onClick={onClose}>Cancel</Button><Button variant="dark" disabled={!tags.length} onClick={() => onApply(tags)}>{mode === "add_tags" ? "Add" : "Remove"}</Button></>}
+      footer={
+        <>
+          <Button onClick={onClose}>{t("Cancel")}</Button>
+          <Button variant="dark" disabled={!tags.length} onClick={() => onApply(tags)}>
+            {mode === "add_tags" ? t("Add") : t("Remove")}
+          </Button>
+        </>
+      }
     >
-      <form onSubmit={(e) => { e.preventDefault(); if (tags.length) onApply(tags); }} style={{ paddingTop: 10 }}>
-        <Input label="Tags" hint="Separate with commas." value={v} onChange={(e) => setV(e.target.value)} autoFocus />
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (tags.length) onApply(tags);
+        }}
+        style={{ paddingTop: 10 }}
+      >
+        <Input label={t("Tags")} hint={t("Separate with commas.")} value={v} onChange={(e) => setV(e.target.value)} autoFocus />
       </form>
     </Dialog>
   );

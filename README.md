@@ -1,5 +1,7 @@
 # Waymark
 
+**English** · [Deutsch](README.de.md)
+
 **A private, self-hosted link shortener: a full Short.io alternative you own.**
 Branded short links, geo and device targeting, A/B splits, password and expiry rules, QR codes, privacy-friendly analytics, a team with roles, scoped API keys and signed webhooks. It runs for free on Cloudflare Workers + D1, or anywhere Docker or Node runs, with a SQLite file.
 
@@ -48,6 +50,7 @@ Nobody can sign up. The owner creates the first account and invites everyone els
 | **API** | Every app action over HTTP; API keys with scopes, optional domain restriction and expiry; a key never exceeds its creator's role; optional CORS; reuse mode to avoid duplicates |
 | **Webhooks** | `link.created`, `link.updated`, `link.deleted`, `link.clicked`, HMAC-SHA256 signed, test button, auto-pause after repeated failures |
 | **Import / export** | Direct Short.io import via their API, CSV import with automatic column matching (Short.io, Bitly, Rebrandly, YOURLS, Kutt, Dub, spreadsheets), click totals kept, full JSON backup and restore, CSV export |
+| **Languages** | English and German UI and visitor pages, picked from the browser, switchable in the sidebar |
 | **Operations** | Audit log, link health check, light and dark theme, keyboard shortcuts (`N` new link, `/` search), mobile layout, migrations run automatically |
 | **Public mode (optional)** | Anonymous `POST /api/v1/public/shorten`, rate-limited per IP, off by default |
 
@@ -188,17 +191,7 @@ Layout: `src/server` (Hono app, redirect path, API routes, storage adapters, ent
 
 ## Auf Deutsch
 
-Waymark ist ein privater Link-Kürzer zum Selbsthosten und eine vollwertige Alternative zu Short.io: eigene Domains, Weiterleitung nach Land, Gerät, Betriebssystem und Sprache, A/B-Tests, Passwort, Ablaufdatum und Klicklimit, QR-Codes, datensparsame Statistiken ohne gespeicherte IP-Adressen, Team mit Rollen, API-Keys mit Berechtigungen und Webhooks. Niemand kann sich selbst registrieren; der Besitzer lädt alle anderen ein.
-
-**Kostenlos betreiben:**
-
-- **Cloudflare Workers + D1:** Button oben klicken oder `npm run deploy`. Gratis bis 100.000 Aufrufe pro Tag und etwa 20.000 gezählte Klicks pro Tag. Wird das Schreib-Budget knapp, funktionieren die Weiterleitungen weiter, nur die Statistik pausiert bis Mitternacht (UTC).
-- **Ohne Limits:** Das Docker-Image auf einem eigenen Server laufen lassen, zum Beispiel Oracle Cloud „Always Free“, ein Raspberry Pi mit Cloudflare Tunnel oder ein kleiner VPS. Die Daten liegen in einer SQLite-Datei.
-- Umzug zwischen den Varianten jederzeit über **Import & Export → Backup**.
-
-**Von Short.io umziehen:** Unter Import & Export einen geheimen Short.io-API-Key eintragen und die Domain wählen. CSV-Exporte von Bitly, YOURLS, Kutt usw. lassen sich per Drag & Drop importieren.
-
-Die Oberfläche ist auf Englisch. Für Datenschutz in Deutschland relevant: Schriften werden selbst ausgeliefert, es gibt keine Drittanbieter-Anfragen, und IP-Adressen werden nicht gespeichert.
+Die vollständige deutsche Anleitung steht in [README.de.md](README.de.md). The admin UI and the visitor pages are available in English and German; the language follows the browser and can be switched in the sidebar.
 
 ## License
 

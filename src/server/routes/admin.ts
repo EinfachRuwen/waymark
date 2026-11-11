@@ -50,7 +50,16 @@ r.post("/domains", requireScope("domains:write"), async (c) => {
   if (input.is_default) stmts.push({ sql: "UPDATE domains SET is_default = 0", params: [] });
   stmts.push({
     sql: "INSERT INTO domains (id, hostname, is_default, root_redirect, not_found_redirect, slug_length, case_sensitive, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-    params: [id, host, input.is_default || first ? 1 : 0, input.root_redirect ?? null, input.not_found_redirect ?? null, input.slug_length ?? 6, input.case_sensitive ? 1 : 0, Date.now()],
+    params: [
+      id,
+      host,
+      input.is_default || first ? 1 : 0,
+      input.root_redirect ?? null,
+      input.not_found_redirect ?? null,
+      input.slug_length ?? 6,
+      input.case_sensitive ? 1 : 0,
+      Date.now(),
+    ],
   });
   await db.batch(stmts);
   invalidateDomains();
@@ -132,7 +141,10 @@ r.patch("/tags/:name", requireScope("links:write"), async (c) => {
         params: [tag.name, input.name, tag.name],
       },
       { sql: "DELETE FROM tags WHERE name = ?", params: [tag.name] },
-      { sql: "INSERT INTO tags (name, color) VALUES (?, ?) ON CONFLICT(name) DO UPDATE SET color = excluded.color", params: [input.name, input.color ?? tag.color] },
+      {
+        sql: "INSERT INTO tags (name, color) VALUES (?, ?) ON CONFLICT(name) DO UPDATE SET color = excluded.color",
+        params: [input.name, input.color ?? tag.color],
+      },
     );
   } else if (input.color) {
     stmts.push({ sql: "UPDATE tags SET color = ? WHERE name = ?", params: [input.color, tag.name] });
@@ -182,9 +194,16 @@ r.post("/users", requireScope("users:write"), async (c) => {
   const { db } = c.get("platform");
   const input = await body(c, z.object({ email: z.email(), name: z.string().trim().max(100).default(""), role: roleEnum.default("editor") }));
   assertCanAssign(a.user.role, input.role);
-  if (await db.first("SELECT 1 FROM users WHERE email = ?", [input.email.toLowerCase()])) throw new HttpError(409, "email_taken", "Someone with this email is already on the team.");
+  if (await db.first("SELECT 1 FROM users WHERE email = ?", [input.email.toLowerCase()]))
+    throw new HttpError(409, "email_taken", "Someone with this email is already on the team.");
   const id = newId("usr_");
-  await db.run("INSERT INTO users (id, email, name, role, created_at) VALUES (?, ?, ?, ?, ?)", [id, input.email.toLowerCase(), input.name, input.role, Date.now()]);
+  await db.run("INSERT INTO users (id, email, name, role, created_at) VALUES (?, ?, ?, ?, ?)", [
+    id,
+    input.email.toLowerCase(),
+    input.name,
+    input.role,
+    Date.now(),
+  ]);
   const invite_url = await makeInvite(c, id);
   await audit(c, "user.invited", "user", id, { email: input.email, role: input.role });
   const u = await db.first<UserRow>("SELECT * FROM users WHERE id = ?", [id]);
@@ -280,10 +299,17 @@ r.post("/api-keys", requireSession, async (c) => {
   }
   const secret = `wm_${randomString(40)}`;
   const id = newId("key_");
-  await db.run(
-    "INSERT INTO api_keys (id, name, prefix, key_hash, user_id, scopes, domain_ids, expires_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-    [id, input.name, secret.slice(0, 9), await sha256(secret), a.user.id, JSON.stringify(input.scopes), input.domain_ids ? JSON.stringify(input.domain_ids) : null, input.expires_at ?? null, Date.now()],
-  );
+  await db.run("INSERT INTO api_keys (id, name, prefix, key_hash, user_id, scopes, domain_ids, expires_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+    id,
+    input.name,
+    secret.slice(0, 9),
+    await sha256(secret),
+    a.user.id,
+    JSON.stringify(input.scopes),
+    input.domain_ids ? JSON.stringify(input.domain_ids) : null,
+    input.expires_at ?? null,
+    Date.now(),
+  ]);
   await audit(c, "api_key.created", "api_key", id, { name: input.name, scopes: input.scopes });
   return c.json({ id, name: input.name, key: secret, prefix: secret.slice(0, 9), scopes: input.scopes }, 201);
 });
@@ -314,7 +340,13 @@ r.post("/webhooks", requireScope("webhooks:write"), async (c) => {
   if (!url.startsWith("https://") && !url.startsWith("http://")) throw new HttpError(422, "invalid_url", "Webhooks need an http(s) URL.");
   const id = newId("whk_");
   const secret = `whsec_${randomString(32)}`;
-  await db.run("INSERT INTO webhooks (id, url, secret, events, created_at) VALUES (?, ?, ?, ?, ?)", [id, url, secret, JSON.stringify(input.events), Date.now()]);
+  await db.run("INSERT INTO webhooks (id, url, secret, events, created_at) VALUES (?, ?, ?, ?, ?)", [
+    id,
+    url,
+    secret,
+    JSON.stringify(input.events),
+    Date.now(),
+  ]);
   invalidateWebhooks();
   await audit(c, "webhook.created", "webhook", id, { url, events: input.events });
   return c.json({ id, url, secret, events: input.events, active: true }, 201);
@@ -323,13 +355,16 @@ r.post("/webhooks", requireScope("webhooks:write"), async (c) => {
 r.patch("/webhooks/:id", requireScope("webhooks:write"), async (c) => {
   const { db } = c.get("platform");
   const input = await body(c, z.object({ url: z.string().max(2048).optional(), events: z.array(eventEnum).min(1).optional(), active: z.boolean().optional() }));
-  const res = await db.run("UPDATE webhooks SET url = COALESCE(?, url), events = COALESCE(?, events), active = COALESCE(?, active), failures = CASE WHEN ? = 1 THEN 0 ELSE failures END WHERE id = ?", [
-    input.url ? checkUrl(input.url) : null,
-    input.events ? JSON.stringify(input.events) : null,
-    input.active === undefined ? null : input.active ? 1 : 0,
-    input.active ? 1 : 0,
-    c.req.param("id"),
-  ]);
+  const res = await db.run(
+    "UPDATE webhooks SET url = COALESCE(?, url), events = COALESCE(?, events), active = COALESCE(?, active), failures = CASE WHEN ? = 1 THEN 0 ELSE failures END WHERE id = ?",
+    [
+      input.url ? checkUrl(input.url) : null,
+      input.events ? JSON.stringify(input.events) : null,
+      input.active === undefined ? null : input.active ? 1 : 0,
+      input.active ? 1 : 0,
+      c.req.param("id"),
+    ],
+  );
   if (!res.changes) throw notFound("Webhook");
   invalidateWebhooks();
   await audit(c, "webhook.updated", "webhook", c.req.param("id"), input);
@@ -393,10 +428,10 @@ r.get("/audit", requireScope("audit:read"), async (c) => {
     where.push("action LIKE ?");
     params.push(`${action}%`);
   }
-  const rows = await db.all<Record<string, unknown>>(
-    `SELECT * FROM audit_log ${where.length ? "WHERE " + where.join(" AND ") : ""} ORDER BY id DESC LIMIT ?`,
-    [...params, limit],
-  );
+  const rows = await db.all<Record<string, unknown>>(`SELECT * FROM audit_log ${where.length ? "WHERE " + where.join(" AND ") : ""} ORDER BY id DESC LIMIT ?`, [
+    ...params,
+    limit,
+  ]);
   return c.json({ data: rows.map((x) => ({ ...x, detail: x.detail ? JSON.parse(x.detail as string) : null })) });
 });
 

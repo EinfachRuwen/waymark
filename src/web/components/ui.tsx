@@ -14,6 +14,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { copy } from "../lib/format";
+import { t } from "../lib/i18n";
 
 /* ───────── Button ───────── */
 
@@ -36,7 +37,19 @@ export function Button({ variant = "default", size, loading, icon, children, cla
 
 /* ───────── Fields ───────── */
 
-export function Field({ label, hint, error, children, htmlFor }: { label?: ReactNode; hint?: ReactNode; error?: string | null; children: ReactNode; htmlFor?: string }) {
+export function Field({
+  label,
+  hint,
+  error,
+  children,
+  htmlFor,
+}: {
+  label?: ReactNode;
+  hint?: ReactNode;
+  error?: string | null;
+  children: ReactNode;
+  htmlFor?: string;
+}) {
   return (
     <div className="field">
       {label && <label htmlFor={htmlFor}>{label}</label>}
@@ -52,7 +65,13 @@ export function Field({ label, hint, error, children, htmlFor }: { label?: React
   );
 }
 
-export function Input({ label, hint, error, className = "", ...rest }: InputHTMLAttributes<HTMLInputElement> & { label?: ReactNode; hint?: ReactNode; error?: string | null }) {
+export function Input({
+  label,
+  hint,
+  error,
+  className = "",
+  ...rest
+}: InputHTMLAttributes<HTMLInputElement> & { label?: ReactNode; hint?: ReactNode; error?: string | null }) {
   const id = useId();
   return (
     <Field label={label} hint={hint} error={error} htmlFor={rest.id ?? id}>
@@ -61,7 +80,19 @@ export function Input({ label, hint, error, className = "", ...rest }: InputHTML
   );
 }
 
-export function Switch({ checked, onChange, label, description, disabled }: { checked: boolean; onChange: (v: boolean) => void; label: ReactNode; description?: ReactNode; disabled?: boolean }) {
+export function Switch({
+  checked,
+  onChange,
+  label,
+  description,
+  disabled,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  label: ReactNode;
+  description?: ReactNode;
+  disabled?: boolean;
+}) {
   return (
     <label className="switch">
       <input type="checkbox" role="switch" checked={checked} disabled={disabled} onChange={(e) => onChange(e.target.checked)} />
@@ -73,7 +104,17 @@ export function Switch({ checked, onChange, label, description, disabled }: { ch
   );
 }
 
-export function Segmented<T extends string>({ value, options, onChange, label }: { value: T; options: { value: T; label: ReactNode }[]; onChange: (v: T) => void; label: string }) {
+export function Segmented<T extends string>({
+  value,
+  options,
+  onChange,
+  label,
+}: {
+  value: T;
+  options: { value: T; label: ReactNode }[];
+  onChange: (v: T) => void;
+  label: string;
+}) {
   return (
     <div className="seg" role="group" aria-label={label}>
       {options.map((o) => (
@@ -85,7 +126,15 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
   );
 }
 
-export function Tabs<T extends string>({ value, tabs, onChange }: { value: T; tabs: { value: T; label: ReactNode; badge?: ReactNode }[]; onChange: (v: T) => void }) {
+export function Tabs<T extends string>({
+  value,
+  tabs,
+  onChange,
+}: {
+  value: T;
+  tabs: { value: T; label: ReactNode; badge?: ReactNode }[];
+  onChange: (v: T) => void;
+}) {
   return (
     <div className="tabs" role="tablist">
       {tabs.map((t) => (
@@ -131,7 +180,9 @@ function useFocusTrap(ref: React.RefObject<HTMLElement | null>) {
     }
     const on = (e: KeyboardEvent) => {
       if (e.key !== "Tab" || !el) return;
-      const items = [...el.querySelectorAll<HTMLElement>("a[href], button:not(:disabled), input:not(:disabled), textarea, select, [tabindex]:not([tabindex='-1'])")];
+      const items = [
+        ...el.querySelectorAll<HTMLElement>("a[href], button:not(:disabled), input:not(:disabled), textarea, select, [tabindex]:not([tabindex='-1'])"),
+      ];
       if (!items.length) return;
       const a = items[0];
       const b = items[items.length - 1];
@@ -151,17 +202,36 @@ function useFocusTrap(ref: React.RefObject<HTMLElement | null>) {
   }, [ref]);
 }
 
-export function Drawer({ title, onClose, children, footer, width }: { title: ReactNode; onClose: () => void; children: ReactNode; footer?: ReactNode; width?: number }) {
+export function Drawer({
+  title,
+  onClose,
+  children,
+  footer,
+  width,
+}: {
+  title: ReactNode;
+  onClose: () => void;
+  children: ReactNode;
+  footer?: ReactNode;
+  width?: number;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   useEscape(onClose);
   useFocusTrap(ref);
   return createPortal(
     <>
       <div className="scrim" onClick={onClose} />
-      <div className="drawer" role="dialog" aria-modal="true" aria-label={typeof title === "string" ? title : undefined} ref={ref} style={width ? { width: `min(${width}px, 100vw)` } : undefined}>
+      <div
+        className="drawer"
+        role="dialog"
+        aria-modal="true"
+        aria-label={typeof title === "string" ? title : undefined}
+        ref={ref}
+        style={width ? { width: `min(${width}px, 100vw)` } : undefined}
+      >
         <div className="drawer-head">
           <h2>{title}</h2>
-          <button className="icon-btn" onClick={onClose} aria-label="Close">
+          <button className="icon-btn" onClick={onClose} aria-label={t("Close")}>
             <X className="icon" />
           </button>
         </div>
@@ -173,7 +243,19 @@ export function Drawer({ title, onClose, children, footer, width }: { title: Rea
   );
 }
 
-export function Dialog({ title, onClose, children, footer, wide }: { title: ReactNode; onClose: () => void; children: ReactNode; footer?: ReactNode; wide?: boolean }) {
+export function Dialog({
+  title,
+  onClose,
+  children,
+  footer,
+  wide,
+}: {
+  title: ReactNode;
+  onClose: () => void;
+  children: ReactNode;
+  footer?: ReactNode;
+  wide?: boolean;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   useEscape(onClose);
   useFocusTrap(ref);
@@ -218,9 +300,9 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
           onClose={() => close(false)}
           footer={
             <>
-              <Button onClick={() => close(false)}>Cancel</Button>
+              <Button onClick={() => close(false)}>{t("Cancel")}</Button>
               <Button variant={state.danger ? "danger" : "dark"} className={state.danger ? "solid" : ""} onClick={() => close(true)} autoFocus>
-                {state.confirm ?? "Confirm"}
+                {state.confirm ?? t("Confirm")}
               </Button>
             </>
           }
@@ -234,7 +316,15 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
 
 /* ───────── Menu ───────── */
 
-export function Menu({ trigger, children, align = "end" }: { trigger: (p: { onClick: (e: React.MouseEvent) => void; "aria-expanded": boolean }) => ReactNode; children: (close: () => void) => ReactNode; align?: "start" | "end" }) {
+export function Menu({
+  trigger,
+  children,
+  align = "end",
+}: {
+  trigger: (p: { onClick: (e: React.MouseEvent) => void; "aria-expanded": boolean }) => ReactNode;
+  children: (close: () => void) => ReactNode;
+  align?: "start" | "end";
+}) {
   const [pos, setPos] = useState<{ x: number; y: number; right: number } | null>(null);
   const ref = useRef<HTMLDivElement>(null);
   const close = useCallback(() => setPos(null), []);
@@ -269,7 +359,13 @@ export function Menu({ trigger, children, align = "end" }: { trigger: (p: { onCl
       })}
       {pos &&
         createPortal(
-          <div className="menu" role="menu" ref={ref} style={align === "end" ? { top: pos.y, right: pos.right } : { top: pos.y, left: pos.x }} onClick={(e) => e.stopPropagation()}>
+          <div
+            className="menu"
+            role="menu"
+            ref={ref}
+            style={align === "end" ? { top: pos.y, right: pos.right } : { top: pos.y, left: pos.x }}
+            onClick={(e) => e.stopPropagation()}
+          >
             {children(close)}
           </div>,
           document.body,
@@ -317,7 +413,7 @@ export function CopyButton({ text, label = "Copy", size = "sm", iconOnly }: { te
       title={iconOnly ? label : undefined}
       onClick={async (e) => {
         e.stopPropagation();
-        if (await copy(text)) toast("Copied to clipboard");
+        if (await copy(text)) toast(t("Copied to clipboard"));
       }}
     >
       {iconOnly ? null : label}
@@ -367,9 +463,9 @@ export function SkeletonRows({ rows = 6, cols = 4 }: { rows?: number; cols?: num
 export function ErrorNote({ error, retry }: { error: Error; retry?: () => void }) {
   return (
     <div className="empty">
-      <h3>This did not load.</h3>
+      <h3>{t("This did not load.")}</h3>
       <p>{error.message}</p>
-      {retry && <Button onClick={retry}>Try again</Button>}
+      {retry && <Button onClick={retry}>{t("Try again")}</Button>}
     </div>
   );
 }

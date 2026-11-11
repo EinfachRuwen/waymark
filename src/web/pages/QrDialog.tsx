@@ -4,12 +4,13 @@ import { renderSVG } from "uqr";
 import { Button, Dialog, Field, Switch } from "../components/ui";
 import type { Link } from "../lib/api";
 import { download } from "../lib/format";
+import { t } from "../lib/i18n";
 
 const PRESETS = [
-  { fg: "#000000", bg: "#ffffff", label: "Black" },
-  { fg: "#1c2a22", bg: "#ffffff", label: "Spruce" },
-  { fg: "#1b1a10", bg: "#f2c230", label: "Signpost" },
-  { fg: "#2f5f9b", bg: "#ffffff", label: "Alpine" },
+  { fg: "#000000", bg: "#ffffff", label: t("Black") },
+  { fg: "#1c2a22", bg: "#ffffff", label: t("Spruce") },
+  { fg: "#1b1a10", bg: "#f2c230", label: t("Signpost") },
+  { fg: "#2f5f9b", bg: "#ffffff", label: t("Alpine") },
 ];
 
 export function qrSvg(text: string, fg: string, bg: string) {
@@ -39,21 +40,27 @@ export function QrDialog({ link, onClose }: { link: Link; onClose: () => void })
 
   return (
     <Dialog
-      title="QR code"
+      title={t("QR code")}
       onClose={onClose}
       footer={
         <>
-          <Button icon={<Download className="icon" />} onClick={() => download(`${name}.svg`, svg, "image/svg+xml")}>SVG</Button>
-          <Button variant="dark" icon={<Download className="icon" />} onClick={() => void png()}>PNG</Button>
+          <Button icon={<Download className="icon" />} onClick={() => download(`${name}.svg`, svg, "image/svg+xml")}>
+            {t("SVG")}
+          </Button>
+          <Button variant="dark" icon={<Download className="icon" />} onClick={() => void png()}>
+            {t("PNG")}
+          </Button>
         </>
       }
     >
       <div className="stack" style={{ paddingTop: 10 }}>
         <div className="qr-box">
           <div className="qr" style={{ background: bg }} dangerouslySetInnerHTML={{ __html: svg }} />
-          <code className="faint" style={{ fontSize: 12 }}>{target}</code>
+          <code className="faint" style={{ fontSize: 12 }}>
+            {target}
+          </code>
         </div>
-        <Field label="Colors">
+        <Field label={t("Colors")}>
           <div className="row" style={{ flexWrap: "wrap" }}>
             {PRESETS.map((p, i) => (
               <button
@@ -69,16 +76,37 @@ export function QrDialog({ link, onClose }: { link: Link; onClose: () => void })
                 }}
               >
                 <span className="dot" style={{ background: p.fg, outline: `3px solid ${p.bg}`, outlineOffset: -1 }} />
-                {p.label}
+                {t(p.label)}
               </button>
             ))}
             <label className="row" style={{ gap: 6, fontSize: 12.5 }}>
-              <input type="color" value={fg} onChange={(e) => { setFg(e.target.value); setPreset(-1); }} aria-label="Foreground" />
-              <input type="color" value={bg} onChange={(e) => { setBg(e.target.value); setPreset(-1); }} aria-label="Background" />
+              <input
+                type="color"
+                value={fg}
+                onChange={(e) => {
+                  setFg(e.target.value);
+                  setPreset(-1);
+                }}
+                aria-label={t("Foreground")}
+              />
+              <input
+                type="color"
+                value={bg}
+                onChange={(e) => {
+                  setBg(e.target.value);
+                  setPreset(-1);
+                }}
+                aria-label={t("Background")}
+              />
             </label>
           </div>
         </Field>
-        <Switch checked={track} onChange={setTrack} label="Count scans separately" description="Adds ?qr so scans show up as QR traffic in analytics." />
+        <Switch
+          checked={track}
+          onChange={setTrack}
+          label={t("Count scans separately")}
+          description={t("Adds ?qr so scans show up as QR traffic in analytics.")}
+        />
       </div>
     </Dialog>
   );

@@ -8,9 +8,22 @@ import { hashPassword, verifyPassword } from "../src/server/lib/crypto";
 
 describe("user agents", () => {
   it("classifies common clients", () => {
-    expect(parseUa("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605 Mobile/15E148 Safari/604.1")).toMatchObject({ os: "iOS", device: "mobile", browser: "Safari", bot: false });
-    expect(parseUa("Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36")).toMatchObject({ os: "Android", device: "mobile", browser: "Chrome" });
-    expect(parseUa("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36 Edg/120")).toMatchObject({ os: "Windows", browser: "Edge", device: "desktop" });
+    expect(parseUa("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605 Mobile/15E148 Safari/604.1")).toMatchObject({
+      os: "iOS",
+      device: "mobile",
+      browser: "Safari",
+      bot: false,
+    });
+    expect(parseUa("Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36")).toMatchObject({
+      os: "Android",
+      device: "mobile",
+      browser: "Chrome",
+    });
+    expect(parseUa("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36 Edg/120")).toMatchObject({
+      os: "Windows",
+      browser: "Edge",
+      device: "desktop",
+    });
     expect(parseUa("facebookexternalhit/1.1")).toMatchObject({ bot: true, preview: true });
     expect(parseUa("curl/8.4.0").bot).toBe(true);
     expect(parseUa("").bot).toBe(true);
@@ -19,7 +32,11 @@ describe("user agents", () => {
 
 describe("targets", () => {
   it("adds UTM without overriding existing params", () => {
-    const t = buildTarget("https://x.dev/?utm_source=keep", { utm: JSON.stringify({ source: "wm", medium: "mail" }), forward_query: 1 }, new URLSearchParams("qr&a=1"));
+    const t = buildTarget(
+      "https://x.dev/?utm_source=keep",
+      { utm: JSON.stringify({ source: "wm", medium: "mail" }), forward_query: 1 },
+      new URLSearchParams("qr&a=1"),
+    );
     expect(t).toBe("https://x.dev/?utm_source=keep&utm_medium=mail&a=1");
   });
   it("leaves app links alone", () => {

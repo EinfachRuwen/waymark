@@ -1,4 +1,5 @@
 import type { Role, Scope } from "../../shared/permissions";
+import { tError } from "./i18n";
 
 export class ApiError extends Error {
   constructor(
@@ -28,7 +29,7 @@ export async function api<T = unknown>(path: string, opts: { method?: string; bo
       /* not json */
     }
     if (res.status === 401 && code === "unauthorized") window.dispatchEvent(new Event("waymark:signed-out"));
-    throw new ApiError(res.status, code, message);
+    throw new ApiError(res.status, code, tError(message));
   }
   if (opts.raw) return res as unknown as T;
   const ct = res.headers.get("content-type") || "";

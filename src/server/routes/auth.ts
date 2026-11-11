@@ -1,18 +1,6 @@
 import { Hono } from "hono";
 import { z } from "zod";
-import {
-  type AppEnv,
-  type Ctx,
-  type UserRow,
-  actorOf,
-  audit,
-  clearThrottle,
-  createSession,
-  destroySession,
-  requireSession,
-  throttle,
-  userView,
-} from "../auth";
+import { type AppEnv, type Ctx, type UserRow, actorOf, audit, clearThrottle, createSession, destroySession, requireSession, throttle, userView } from "../auth";
 import { invalidateDomains, normalizeHost } from "../domains";
 import { HttpError } from "../errors";
 import { hashPassword, newId, randomString, sha256, timingSafeEqual, verifyPassword } from "../lib/crypto";
@@ -149,7 +137,11 @@ r.patch("/me", requireSession, async (c) => {
     const taken = await db.first<{ id: string }>("SELECT id FROM users WHERE email = ? AND id != ?", [input.email.toLowerCase(), a.user.id]);
     if (taken) throw new HttpError(409, "email_taken", "Another account uses this email.");
   }
-  await db.run("UPDATE users SET name = COALESCE(?, name), email = COALESCE(?, email) WHERE id = ?", [input.name ?? null, input.email?.toLowerCase() ?? null, a.user.id]);
+  await db.run("UPDATE users SET name = COALESCE(?, name), email = COALESCE(?, email) WHERE id = ?", [
+    input.name ?? null,
+    input.email?.toLowerCase() ?? null,
+    a.user.id,
+  ]);
   return c.json({ ok: true });
 });
 
@@ -169,10 +161,13 @@ r.get("/me/sessions", requireSession, async (c) => {
   const a = actorOf(c);
   const rows = await c
     .get("platform")
-    .db.all<{ id: string; created_at: number; last_seen_at: number; ip: string | null; user_agent: string | null }>(
-      "SELECT id, created_at, last_seen_at, ip, user_agent FROM sessions WHERE user_id = ? AND expires_at > ? ORDER BY last_seen_at DESC",
-      [a.user.id, Date.now()],
-    );
+    .db.all<{
+      id: string;
+      created_at: number;
+      last_seen_at: number;
+      ip: string | null;
+      user_agent: string | null;
+    }>("SELECT id, created_at, last_seen_at, ip, user_agent FROM sessions WHERE user_id = ? AND expires_at > ? ORDER BY last_seen_at DESC", [a.user.id, Date.now()]);
   return c.json({ data: rows.map((s) => ({ ...s, current: a.type === "user" && s.id === a.sessionId })) });
 });
 

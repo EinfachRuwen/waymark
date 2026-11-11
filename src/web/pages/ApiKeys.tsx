@@ -8,11 +8,12 @@ import { ago, date } from "../lib/format";
 import { useApi } from "../lib/hooks";
 import { Link } from "../lib/router";
 import { useSession } from "../lib/session";
+import { t, tn } from "../lib/i18n";
 
 const PRESETS: { label: string; scopes: Scope[] }[] = [
-  { label: "Shorten only", scopes: ["links:write"] },
-  { label: "Read-only", scopes: ["links:read", "analytics:read", "domains:read"] },
-  { label: "Links & stats", scopes: ["links:read", "links:write", "links:delete", "analytics:read", "domains:read"] },
+  { label: t("Shorten only"), scopes: ["links:write"] },
+  { label: t("Read-only"), scopes: ["links:read", "analytics:read", "domains:read"] },
+  { label: t("Links & stats"), scopes: ["links:read", "links:write", "links:delete", "analytics:read", "domains:read"] },
 ];
 
 export function ApiKeys() {
@@ -24,9 +25,17 @@ export function ApiKeys() {
   const toast = useToast();
 
   async function revoke(k: ApiKey) {
-    if (!(await confirm({ title: `Revoke “${k.name}”?`, body: "Anything using this key stops working immediately.", confirm: "Revoke key", danger: true }))) return;
+    if (
+      !(await confirm({
+        title: t("Revoke “{name}”?", { name: k.name }),
+        body: t("Anything using this key stops working immediately."),
+        confirm: t("Revoke key"),
+        danger: true,
+      }))
+    )
+      return;
     await api(`/api-keys/${k.id}`, { method: "DELETE" });
-    toast("Key revoked");
+    toast(t("Key revoked"));
     void reload();
   }
 
@@ -36,13 +45,26 @@ export function ApiKeys() {
   return (
     <div className="page">
       <PageHead
-        title="API keys"
-        desc={<>Keys let scripts, apps and automations use the <Link to="/api">Waymark API</Link>. A key can do at most what its creator's role allows.</>}
-        actions={<Button variant="primary" icon={<Plus className="icon" />} onClick={() => setCreating(true)}>Create key</Button>}
+        title={t("API keys")}
+        desc={
+          <>
+            {t("Keys let scripts, apps and automations use the")} <Link to="/api">{t("Waymark API")}</Link>
+            {t(". A key can do at most what its creator's role allows.")}
+          </>
+        }
+        actions={
+          <Button variant="primary" icon={<Plus className="icon" />} onClick={() => setCreating(true)}>
+            {t("Create key")}
+          </Button>
+        }
       />
       {error && <ErrorNote error={error} retry={reload} />}
       <div className="panel list-rows">
-        {data && !active.length && <Empty sign="wm_…" title="No API keys yet.">Create one to shorten links from Zapier, n8n, iOS Shortcuts, a CMS or your own code.</Empty>}
+        {data && !active.length && (
+          <Empty sign="wm_…" title={t("No API keys yet.")}>
+            {t("Create one to shorten links from Zapier, n8n, iOS Shortcuts, a CMS or your own code.")}
+          </Empty>
+        )}
         {active.map((k) => (
           <div className="list-row" key={k.id}>
             <KeyRound className="icon faint" />
@@ -50,36 +72,63 @@ export function ApiKeys() {
               <div className="title">{k.name}</div>
               <div className="sub">
                 <span className="mono">{k.prefix}…</span> · {k.scopes.join(", ")}
-                {k.domain_ids ? ` · ${k.domain_ids.length} domain${k.domain_ids.length === 1 ? "" : "s"}` : ""}
+                {k.domain_ids ? ` · ${tn(k.domain_ids.length, "{n} domain", "{n} domains")}` : ""}
               </div>
               <div className="sub">
-                Used {ago(k.last_used_at)} · created {date(k.created_at)}
-                {isAdmin && k.user_id !== me?.user.id ? ` by ${k.user_email}` : ""}
-                {k.expires_at ? ` · ${k.expires_at < Date.now() ? "expired" : "expires"} ${date(k.expires_at)}` : ""}
+                {t("Used {ago} · created {d}", { ago: ago(k.last_used_at), d: date(k.created_at) })}
+                {isAdmin && k.user_id !== me?.user.id ? t(" by {email}", { email: k.user_email }) : ""}
+                {k.expires_at ? ` · ${t(k.expires_at < Date.now() ? "expired {d}" : "expires {d}", { d: date(k.expires_at) })}` : ""}
               </div>
             </div>
-            <Button size="sm" variant="danger" onClick={() => void revoke(k)}>Revoke</Button>
+            <Button size="sm" variant="danger" onClick={() => void revoke(k)}>
+              {t("Revoke")}
+            </Button>
           </div>
         ))}
       </div>
       {revoked.length > 0 && (
         <details style={{ marginTop: 18 }}>
-          <summary className="muted" style={{ cursor: "pointer", fontSize: 13 }}>{revoked.length} revoked key{revoked.length === 1 ? "" : "s"}</summary>
+          <summary className="muted" style={{ cursor: "pointer", fontSize: 13 }}>
+            {tn(revoked.length, "{n} revoked key", "{n} revoked keys")}
+          </summary>
           <div className="panel list-rows" style={{ marginTop: 10 }}>
             {revoked.map((k) => (
               <div className="list-row" key={k.id} style={{ opacity: 0.65 }}>
-                <div className="grow"><div className="title">{k.name}</div><div className="sub">Revoked {ago(k.revoked_at)}</div></div>
+                <div className="grow">
+                  <div className="title">{k.name}</div>
+                  <div className="sub">{t("Revoked {ago}", { ago: ago(k.revoked_at) })}</div>
+                </div>
               </div>
             ))}
           </div>
         </details>
       )}
-      {creating && <CreateKey onClose={() => setCreating(false)} onCreated={(s) => { setCreating(false); setSecret(s); void reload(); }} />}
+      {creating && (
+        <CreateKey
+          onClose={() => setCreating(false)}
+          onCreated={(s) => {
+            setCreating(false);
+            setSecret(s);
+            void reload();
+          }}
+        />
+      )}
       {secret && (
-        <Dialog title="Your new API key" onClose={() => setSecret(null)} footer={<Button variant="dark" onClick={() => setSecret(null)}>I saved it</Button>}>
+        <Dialog
+          title={t("Your new API key")}
+          onClose={() => setSecret(null)}
+          footer={
+            <Button variant="dark" onClick={() => setSecret(null)}>
+              {t("I saved it")}
+            </Button>
+          }
+        >
           <div className="stack" style={{ paddingTop: 10 }}>
-            <Callout kind="warn">This is the only time the key is shown. Store it in a password manager or your app's secrets.</Callout>
-            <div className="secret"><code>{secret.key}</code><CopyButton text={secret.key} iconOnly /></div>
+            <Callout kind="warn">{t("This is the only time the key is shown. Store it in a password manager or your app's secrets.")}</Callout>
+            <div className="secret">
+              <code>{secret.key}</code>
+              <CopyButton text={secret.key} iconOnly />
+            </div>
             <pre className="code">{`curl -X POST ${location.origin}/api/v1/links \\
   -H "Authorization: Bearer ${secret.key.slice(0, 12)}…" \\
   -H "Content-Type: application/json" \\
@@ -102,12 +151,13 @@ function CreateKey({ onClose, onCreated }: { onClose: () => void; onCreated: (s:
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const toggle = (s: Scope) => setScopes((x) => {
-    const n = new Set(x);
-    if (n.has(s)) n.delete(s);
-    else n.add(s);
-    return n;
-  });
+  const toggle = (s: Scope) =>
+    setScopes((x) => {
+      const n = new Set(x);
+      if (n.has(s)) n.delete(s);
+      else n.add(s);
+      return n;
+    });
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -131,37 +181,96 @@ function CreateKey({ onClose, onCreated }: { onClose: () => void; onCreated: (s:
   }
 
   return (
-    <Dialog wide title="Create an API key" onClose={onClose} footer={<><Button onClick={onClose}>Cancel</Button><Button type="submit" form="key-form" variant="dark" loading={busy} disabled={!scopes.size || !name.trim() || (restrict && !domainIds.size)}>Create key</Button></>}>
+    <Dialog
+      wide
+      title={t("Create an API key")}
+      onClose={onClose}
+      footer={
+        <>
+          <Button onClick={onClose}>{t("Cancel")}</Button>
+          <Button type="submit" form="key-form" variant="dark" loading={busy} disabled={!scopes.size || !name.trim() || (restrict && !domainIds.size)}>
+            {t("Create key")}
+          </Button>
+        </>
+      }
+    >
       <form id="key-form" onSubmit={submit} className="stack" style={{ paddingTop: 12 }}>
-        <Input label="Name" required placeholder="Newsletter automation" value={name} onChange={(e) => setName(e.target.value)} autoFocus hint="Shown in the audit log next to everything this key does." />
-        <Field label="Permissions">
+        <Input
+          label={t("Name")}
+          required
+          placeholder={t("Newsletter automation")}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          autoFocus
+          hint={t("Shown in the audit log next to everything this key does.")}
+        />
+        <Field label={t("Permissions")}>
           <div className="row" style={{ flexWrap: "wrap", marginBottom: 6 }}>
             {PRESETS.map((p) => (
-              <Button key={p.label} size="sm" variant="ghost" onClick={() => setScopes(new Set(p.scopes.filter((s) => allowed.includes(s))))}>{p.label}</Button>
+              <Button key={p.label} size="sm" variant="ghost" onClick={() => setScopes(new Set(p.scopes.filter((s) => allowed.includes(s))))}>
+                {t(p.label)}
+              </Button>
             ))}
           </div>
           <div className="scope-grid">
             {(Object.keys(SCOPES) as Scope[]).map((s) => (
               <label key={s} className="check" style={{ alignItems: "flex-start", opacity: allowed.includes(s) ? 1 : 0.45 }}>
-                <input type="checkbox" className="box" checked={scopes.has(s)} disabled={!allowed.includes(s)} onChange={() => toggle(s)} style={{ marginTop: 2 }} />
-                <span><code style={{ fontSize: 12.5 }}>{s}</code><small>{SCOPES[s]}</small></span>
+                <input
+                  type="checkbox"
+                  className="box"
+                  checked={scopes.has(s)}
+                  disabled={!allowed.includes(s)}
+                  onChange={() => toggle(s)}
+                  style={{ marginTop: 2 }}
+                />
+                <span>
+                  <code style={{ fontSize: 12.5 }}>{s}</code>
+                  <small>{t(SCOPES[s])}</small>
+                </span>
               </label>
             ))}
           </div>
         </Field>
-        <Switch checked={restrict} onChange={setRestrict} label="Limit to specific domains" description="The key can only see and create links on these domains." />
+        <Switch
+          checked={restrict}
+          onChange={setRestrict}
+          label={t("Limit to specific domains")}
+          description={t("The key can only see and create links on these domains.")}
+        />
         {restrict && (
           <div className="stack-sm" style={{ paddingLeft: 46 }}>
             {domains.map((d) => (
               <label key={d.id} className="check">
-                <input type="checkbox" className="box" checked={domainIds.has(d.id)} onChange={() => setDomainIds((x) => { const n = new Set(x); if (n.has(d.id)) n.delete(d.id); else n.add(d.id); return n; })} />
+                <input
+                  type="checkbox"
+                  className="box"
+                  checked={domainIds.has(d.id)}
+                  onChange={() =>
+                    setDomainIds((x) => {
+                      const n = new Set(x);
+                      if (n.has(d.id)) n.delete(d.id);
+                      else n.add(d.id);
+                      return n;
+                    })
+                  }
+                />
                 <span className="mono">{d.hostname}</span>
               </label>
             ))}
           </div>
         )}
-        <Input label="Expires" type="date" value={expires} onChange={(e) => setExpires(e.target.value)} hint="Optional. The key stops working at the end of this day." />
-        {error && <p className="form-error" role="alert">{error}</p>}
+        <Input
+          label={t("Expires")}
+          type="date"
+          value={expires}
+          onChange={(e) => setExpires(e.target.value)}
+          hint={t("Optional. The key stops working at the end of this day.")}
+        />
+        {error && (
+          <p className="form-error" role="alert">
+            {error}
+          </p>
+        )}
       </form>
     </Dialog>
   );

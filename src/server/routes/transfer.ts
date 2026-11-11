@@ -18,7 +18,8 @@ const SHORTIO = "https://api.short.io";
 
 async function shortio(apiKey: string, path: string) {
   const res = await fetch(SHORTIO + path, { headers: { authorization: apiKey, accept: "application/json" }, signal: AbortSignal.timeout(20_000) });
-  if (res.status === 401 || res.status === 403) throw new HttpError(422, "shortio_auth", "Short.io rejected the API key. Use a secret key from Short.io → Integrations & API.");
+  if (res.status === 401 || res.status === 403)
+    throw new HttpError(422, "shortio_auth", "Short.io rejected the API key. Use a secret key from Short.io → Integrations & API.");
   if (!res.ok) throw new HttpError(502, "shortio_error", `Short.io answered ${res.status}. Try again in a moment.`);
   return res.json() as Promise<unknown>;
 }
@@ -101,11 +102,25 @@ r.post("/import/shortio/links", requireScope("links:write"), async (c) => {
   const qs = new URLSearchParams({ domain_id: input.shortio_domain_id, limit: "150" });
   if (input.page_token) qs.set("pageToken", input.page_token);
   const page = (await shortio(input.api_key, `/api/links?${qs}`)) as { links?: ShortioLink[]; count?: number; nextPageToken?: string | null };
-  const out = { created: 0, updated: 0, skipped: 0, failed: 0, errors: [] as { slug?: string; message: string }[], total: page.count ?? null, next_page_token: page.nextPageToken || null };
+  const out = {
+    created: 0,
+    updated: 0,
+    skipped: 0,
+    failed: 0,
+    errors: [] as { slug?: string; message: string }[],
+    total: page.count ?? null,
+    next_page_token: page.nextPageToken || null,
+  };
   for (const raw of page.links || []) {
     const item = mapShortioLink(raw);
     try {
-      const res = await createLink(db, item, { domain: d, userId: a.user.id, via: "import:shortio", onConflict: input.on_conflict, createdAt: item.created_at });
+      const res = await createLink(db, item, {
+        domain: d,
+        userId: a.user.id,
+        via: "import:shortio",
+        onConflict: input.on_conflict,
+        createdAt: item.created_at,
+      });
       out[res.status]++;
     } catch (e) {
       out.failed++;
@@ -128,7 +143,20 @@ r.get("/export/links.csv", requireScope("links:read"), async (c) => {
   for (const l of rows) {
     const v = linkView(l, domains);
     lines.push(
-      [v.short_url, v.domain, v.slug, v.url, v.title, v.tags.join("|"), v.clicks, new Date(v.created_at).toISOString(), v.expires_at ? new Date(v.expires_at).toISOString() : "", v.max_clicks ?? "", v.archived ? 1 : 0, v.notes]
+      [
+        v.short_url,
+        v.domain,
+        v.slug,
+        v.url,
+        v.title,
+        v.tags.join("|"),
+        v.clicks,
+        new Date(v.created_at).toISOString(),
+        v.expires_at ? new Date(v.expires_at).toISOString() : "",
+        v.max_clicks ?? "",
+        v.archived ? 1 : 0,
+        v.notes,
+      ]
         .map(csvEscape)
         .join(","),
     );
@@ -149,11 +177,19 @@ r.get("/export/backup.json", requireSession, requireRole("owner", "admin"), asyn
 
 r.post("/import/backup", requireSession, requireRole("owner", "admin"), async (c) => {
   const { db } = c.get("platform");
-  const data = (await c.req.json().catch(() => null)) as { format?: string; domains?: Record<string, unknown>[]; links?: Record<string, unknown>[]; tags?: Record<string, unknown>[] } | null;
+  const data = (await c.req.json().catch(() => null)) as {
+    format?: string;
+    domains?: Record<string, unknown>[];
+    links?: Record<string, unknown>[];
+    tags?: Record<string, unknown>[];
+  } | null;
   if (!data || data.format !== "waymark-backup") throw new HttpError(422, "invalid_backup", "This file is not a Waymark backup.");
   const insert = (table: string, row: Record<string, unknown>) => {
     const keys = Object.keys(row).filter((k) => /^[a-z_]+$/.test(k));
-    return { sql: `INSERT OR IGNORE INTO ${table} (${keys.join(",")}) VALUES (${keys.map(() => "?").join(",")})`, params: keys.map((k) => row[k] as string | number | null) };
+    return {
+      sql: `INSERT OR IGNORE INTO ${table} (${keys.join(",")}) VALUES (${keys.map(() => "?").join(",")})`,
+      params: keys.map((k) => row[k] as string | number | null),
+    };
   };
   const existing = await listDomains(db, true);
   const domainMap = new Map<string, string>();

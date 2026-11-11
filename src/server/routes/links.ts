@@ -126,7 +126,10 @@ r.post("/links", requireScope("links:write"), async (c) => {
   const input = await body(c, createSchema);
   const d = await domainFor(c, input.domain);
   if (input.reuse && !input.slug) {
-    const existing = await db.first<LinkRow>("SELECT * FROM links WHERE domain_id = ? AND url = ? AND archived = 0 ORDER BY created_at LIMIT 1", [d.id, input.url.trim()]);
+    const existing = await db.first<LinkRow>("SELECT * FROM links WHERE domain_id = ? AND url = ? AND archived = 0 ORDER BY created_at LIMIT 1", [
+      d.id,
+      input.url.trim(),
+    ]);
     if (existing) return c.json(linkView(existing, await listDomains(db)), 200);
   }
   const { row } = await createLink(db, input, { domain: d, userId: a.user.id, via: via(a) });
@@ -172,7 +175,13 @@ r.post("/links/bulk", requireScope("links:write"), async (c) => {
       if (result.errors.length < 200) result.errors.push({ index: i, slug, message: (e as Error).message });
     }
   }
-  await audit(c, "link.bulk_created", null, null, { created: result.created, updated: result.updated, skipped: result.skipped, failed: result.failed, source: input.source });
+  await audit(c, "link.bulk_created", null, null, {
+    created: result.created,
+    updated: result.updated,
+    skipped: result.skipped,
+    failed: result.failed,
+    source: input.source,
+  });
   return c.json(result);
 });
 
@@ -204,7 +213,10 @@ r.post("/links/actions", async (c) => {
         stmts.push({ sql: "DELETE FROM clicks WHERE link_id = ?", params: [l.id] }, { sql: "DELETE FROM links WHERE id = ?", params: [l.id] });
         break;
       case "reset_clicks":
-        stmts.push({ sql: "DELETE FROM clicks WHERE link_id = ?", params: [l.id] }, { sql: "UPDATE links SET clicks = 0, last_click_at = NULL WHERE id = ?", params: [l.id] });
+        stmts.push(
+          { sql: "DELETE FROM clicks WHERE link_id = ?", params: [l.id] },
+          { sql: "UPDATE links SET clicks = 0, last_click_at = NULL WHERE id = ?", params: [l.id] },
+        );
         break;
       case "add_tags":
       case "remove_tags": {
@@ -276,7 +288,12 @@ r.post("/links/:id/check", requireScope("links:read"), async (c) => {
     await res.body?.cancel().catch(() => {});
     return c.json({ ok: res.status < 400, status: res.status, location: res.headers.get("location"), ms: Date.now() - started });
   } catch (e) {
-    return c.json({ ok: false, status: 0, error: (e as Error).name === "TimeoutError" ? "Timed out after 8 seconds." : "Could not connect.", ms: Date.now() - started });
+    return c.json({
+      ok: false,
+      status: 0,
+      error: (e as Error).name === "TimeoutError" ? "Timed out after 8 seconds." : "Could not connect.",
+      ms: Date.now() - started,
+    });
   }
 });
 

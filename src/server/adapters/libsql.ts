@@ -25,10 +25,16 @@ export function libsqlAdapter(client: Client): Db {
     },
     async batch(statements) {
       if (!statements.length) return;
-      await client.batch(statements.map((s) => ({ sql: s.sql, args: normalize(s.params) })), "write");
+      await client.batch(
+        statements.map((s) => ({ sql: s.sql, args: normalize(s.params) })),
+        "write",
+      );
     },
     async exec(sql) {
-      await client.batch(splitStatements(sql).map((s) => ({ sql: s, args: [] })), "write");
+      await client.batch(
+        splitStatements(sql).map((s) => ({ sql: s, args: [] })),
+        "write",
+      );
     },
   };
 }

@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Scope } from "../../shared/permissions";
 import { api, type Domain, type Me } from "./api";
+import { t } from "./i18n";
 
 interface AuthState {
   setup_required: boolean;
@@ -54,7 +55,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, [reloadDomains]);
 
   useEffect(() => {
-    refresh().catch(() => setState({ setup_required: false, setup_token_required: false, instance_name: "Waymark", user: null }));
+    refresh().catch(() => setState({ setup_required: false, setup_token_required: false, instance_name: t("Waymark"), user: null }));
     const out = () => {
       setMe(null);
       setState((s) => (s ? { ...s, user: null } : s));

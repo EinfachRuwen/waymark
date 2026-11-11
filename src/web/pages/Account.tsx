@@ -7,6 +7,7 @@ import { api } from "../lib/api";
 import { ago } from "../lib/format";
 import { useApi } from "../lib/hooks";
 import { useSession } from "../lib/session";
+import { t } from "../lib/i18n";
 
 interface SessionRow {
   id: string;
@@ -18,10 +19,30 @@ interface SessionRow {
 }
 
 function device(ua: string | null) {
-  if (!ua) return "Unknown device";
-  const os = /iphone/i.test(ua) ? "iPhone" : /ipad/i.test(ua) ? "iPad" : /android/i.test(ua) ? "Android" : /mac os/i.test(ua) ? "Mac" : /windows/i.test(ua) ? "Windows" : /linux/i.test(ua) ? "Linux" : "Device";
-  const br = /edg\//i.test(ua) ? "Edge" : /firefox/i.test(ua) ? "Firefox" : /chrome/i.test(ua) ? "Chrome" : /safari/i.test(ua) ? "Safari" : "Browser";
-  return `${br} on ${os}`;
+  if (!ua) return t("Unknown device");
+  const os = /iphone/i.test(ua)
+    ? "iPhone"
+    : /ipad/i.test(ua)
+      ? "iPad"
+      : /android/i.test(ua)
+        ? t("Android")
+        : /mac os/i.test(ua)
+          ? t("Mac")
+          : /windows/i.test(ua)
+            ? t("Windows")
+            : /linux/i.test(ua)
+              ? t("Linux")
+              : t("Device");
+  const br = /edg\//i.test(ua)
+    ? t("Edge")
+    : /firefox/i.test(ua)
+      ? t("Firefox")
+      : /chrome/i.test(ua)
+        ? t("Chrome")
+        : /safari/i.test(ua)
+          ? t("Safari")
+          : t("Browser");
+  return t("{b} on {o}", { b: br, o: os });
 }
 
 export function Account() {
@@ -38,7 +59,7 @@ export function Account() {
     try {
       await api("/me", { method: "PATCH", body: { name, email } });
       await refresh();
-      toast("Profile saved");
+      toast(t("Profile saved"));
     } catch (err) {
       toast((err as Error).message, "error");
     }
@@ -50,7 +71,7 @@ export function Account() {
     try {
       await api("/me/password", { body: pw });
       setPw({ current: "", next: "" });
-      toast("Password changed. Other sessions were signed out.");
+      toast(t("Password changed. Other sessions were signed out."));
       void sessions.reload();
     } catch (err) {
       setPwError((err as Error).message);
@@ -59,40 +80,85 @@ export function Account() {
 
   return (
     <div className="page" style={{ maxWidth: 860 }}>
-      <PageHead title="Your account" desc={`${ROLE_INFO[me!.user.role].label}: ${ROLE_INFO[me!.user.role].summary}`} />
+      <PageHead title={t("Your account")} desc={`${t(ROLE_INFO[me!.user.role].label)}: ${t(ROLE_INFO[me!.user.role].summary)}`} />
       <div className="stack" style={{ gap: 18 }}>
         <section className="panel">
           <form className="panel-body stack" onSubmit={saveProfile}>
-            <div className="section-title">Profile</div>
+            <div className="section-title">{t("Profile")}</div>
             <div className="grid-2">
-              <Input label="Name" value={name} onChange={(e) => setName(e.target.value)} />
-              <Input label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <Input label={t("Name")} value={name} onChange={(e) => setName(e.target.value)} />
+              <Input label={t("Email")} type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
-            <div><Button type="submit" variant="dark">Save profile</Button></div>
+            <div>
+              <Button type="submit" variant="dark">
+                {t("Save profile")}
+              </Button>
+            </div>
           </form>
         </section>
         <section className="panel">
           <form className="panel-body stack" onSubmit={savePassword}>
-            <div className="section-title">Password</div>
+            <div className="section-title">{t("Password")}</div>
             <div className="grid-2">
-              <Input label="Current password" type="password" autoComplete="current-password" value={pw.current} onChange={(e) => setPw({ ...pw, current: e.target.value })} required />
-              <Input label="New password" type="password" autoComplete="new-password" minLength={10} value={pw.next} onChange={(e) => setPw({ ...pw, next: e.target.value })} required hint="At least 10 characters." error={pwError} />
+              <Input
+                label={t("Current password")}
+                type="password"
+                autoComplete="current-password"
+                value={pw.current}
+                onChange={(e) => setPw({ ...pw, current: e.target.value })}
+                required
+              />
+              <Input
+                label={t("New password")}
+                type="password"
+                autoComplete="new-password"
+                minLength={10}
+                value={pw.next}
+                onChange={(e) => setPw({ ...pw, next: e.target.value })}
+                required
+                hint={t("At least 10 characters.")}
+                error={pwError}
+              />
             </div>
-            <div><Button type="submit" variant="dark">Change password</Button></div>
+            <div>
+              <Button type="submit" variant="dark">
+                {t("Change password")}
+              </Button>
+            </div>
           </form>
         </section>
         <section className="panel">
-          <div className="panel-head"><h2>Signed-in devices</h2></div>
+          <div className="panel-head">
+            <h2>{t("Signed-in devices")}</h2>
+          </div>
           <div className="list-rows" style={{ marginTop: 8 }}>
             {sessions.data?.data.map((s) => (
               <div className="list-row" key={s.id}>
                 <Monitor className="icon faint" />
                 <div className="grow">
-                  <div className="title">{device(s.user_agent)} {s.current && <span className="chip moss" style={{ marginLeft: 6 }}>this device</span>}</div>
-                  <div className="sub">Active {ago(s.last_seen_at)}{s.ip ? ` · ${s.ip}` : ""}</div>
+                  <div className="title">
+                    {device(s.user_agent)}{" "}
+                    {s.current && (
+                      <span className="chip moss" style={{ marginLeft: 6 }}>
+                        {t("this device")}
+                      </span>
+                    )}
+                  </div>
+                  <div className="sub">
+                    {t("Active {ago}", { ago: ago(s.last_seen_at) })}
+                    {s.ip ? ` · ${s.ip}` : ""}
+                  </div>
                 </div>
                 {!s.current && (
-                  <Button size="sm" onClick={async () => { await api(`/me/sessions/${s.id}`, { method: "DELETE" }); void sessions.reload(); }}>Sign out</Button>
+                  <Button
+                    size="sm"
+                    onClick={async () => {
+                      await api(`/me/sessions/${s.id}`, { method: "DELETE" });
+                      void sessions.reload();
+                    }}
+                  >
+                    {t("Sign out")}
+                  </Button>
                 )}
               </div>
             ))}

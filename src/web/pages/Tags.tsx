@@ -7,6 +7,7 @@ import { num, TAG_COLORS } from "../lib/format";
 import { useApi } from "../lib/hooks";
 import { Link } from "../lib/router";
 import { useSession } from "../lib/session";
+import { t, tn } from "../lib/i18n";
 
 export function TagsPage() {
   const { can, bumpLinks } = useSession();
@@ -15,52 +16,86 @@ export function TagsPage() {
   const confirm = useConfirm();
   const [editing, setEditing] = useState<Tag | null>(null);
 
-  async function setColor(t: Tag, color: string) {
-    await api(`/tags/${encodeURIComponent(t.name)}`, { method: "PATCH", body: { color } });
+  async function setColor(tag: Tag, color: string) {
+    await api(`/tags/${encodeURIComponent(tag.name)}`, { method: "PATCH", body: { color } });
     void reload();
   }
-  async function remove(t: Tag) {
-    if (!(await confirm({ title: `Delete the tag “${t.name}”?`, body: `It is removed from ${num(t.links)} links. The links stay.`, confirm: "Delete tag", danger: true }))) return;
-    await api(`/tags/${encodeURIComponent(t.name)}`, { method: "DELETE" });
-    toast("Tag deleted");
+  async function remove(tag: Tag) {
+    if (
+      !(await confirm({
+        title: t("Delete the tag “{name}”?", { name: tag.name }),
+        body: tn(tag.links, "It is removed from {n} link. The link stays.", "It is removed from {n} links. The links stay."),
+        confirm: t("Delete tag"),
+        danger: true,
+      }))
+    )
+      return;
+    await api(`/tags/${encodeURIComponent(tag.name)}`, { method: "DELETE" });
+    toast(t("Tag deleted"));
     bumpLinks();
     void reload();
   }
 
   return (
     <div className="page">
-      <PageHead title="Tags" desc="Group links by campaign, channel or project. Add tags while editing a link or in bulk from the link list." />
+      <PageHead title={t("Tags")} desc={t("Group links by campaign, channel or project. Add tags while editing a link or in bulk from the link list.")} />
       {error && <ErrorNote error={error} retry={reload} />}
       <div className="panel list-rows">
-        {data && !data.data.length && <Empty sign="untagged" title="No tags yet.">Tags appear here as soon as a link has one.</Empty>}
-        {data?.data.map((t) => (
-          <div className="list-row" key={t.name}>
-            <span className="tag" style={{ ["--c" as string]: TAG_COLORS[t.color], fontSize: 14, color: "var(--ink)" }}>{t.name}</span>
+        {data && !data.data.length && (
+          <Empty sign={t("untagged")} title={t("No tags yet.")}>
+            {t("Tags appear here as soon as a link has one.")}
+          </Empty>
+        )}
+        {data?.data.map((tag) => (
+          <div className="list-row" key={tag.name}>
+            <span className="tag" style={{ ["--c" as string]: TAG_COLORS[tag.color], fontSize: 14, color: "var(--ink)" }}>
+              {tag.name}
+            </span>
             <div className="grow">
-              <Link to={`/links?tag=${encodeURIComponent(t.name)}`} className="sub">{num(t.links)} link{t.links === 1 ? "" : "s"}</Link>
+              <Link to={`/links?tag=${encodeURIComponent(tag.name)}`} className="sub">
+                {num(tag.links)} link{tag.links === 1 ? "" : "s"}
+              </Link>
             </div>
             {can("links:write") && (
               <div className="row" style={{ gap: 4 }}>
-                <div className="row" style={{ gap: 3 }} role="radiogroup" aria-label={`Color for ${t.name}`}>
+                <div className="row" style={{ gap: 3 }} role="radiogroup" aria-label={`Color for ${tag.name}`}>
                   {Object.entries(TAG_COLORS).map(([k, v]) => (
                     <button
                       key={k}
                       role="radio"
-                      aria-checked={t.color === k}
+                      aria-checked={tag.color === k}
                       aria-label={k}
-                      onClick={() => void setColor(t, k)}
-                      style={{ width: 18, height: 18, borderRadius: 4, border: t.color === k ? "2px solid var(--ink)" : "2px solid transparent", background: v, cursor: "pointer", padding: 0 }}
+                      onClick={() => void setColor(tag, k)}
+                      style={{
+                        width: 18,
+                        height: 18,
+                        borderRadius: 4,
+                        border: tag.color === k ? "2px solid var(--ink)" : "2px solid transparent",
+                        background: v,
+                        cursor: "pointer",
+                        padding: 0,
+                      }}
                     />
                   ))}
                 </div>
-                <Button size="sm" variant="ghost" icon={<Pencil className="icon" />} aria-label="Rename" onClick={() => setEditing(t)} />
-                <Button size="sm" variant="ghost" icon={<Trash2 className="icon" />} aria-label="Delete" onClick={() => void remove(t)} />
+                <Button size="sm" variant="ghost" icon={<Pencil className="icon" />} aria-label={t("Rename")} onClick={() => setEditing(tag)} />
+                <Button size="sm" variant="ghost" icon={<Trash2 className="icon" />} aria-label={t("Delete")} onClick={() => void remove(tag)} />
               </div>
             )}
           </div>
         ))}
       </div>
-      {editing && <RenameDialog tag={editing} onClose={() => setEditing(null)} onDone={() => { setEditing(null); bumpLinks(); void reload(); }} />}
+      {editing && (
+        <RenameDialog
+          tag={editing}
+          onClose={() => setEditing(null)}
+          onDone={() => {
+            setEditing(null);
+            bumpLinks();
+            void reload();
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -77,9 +112,33 @@ function RenameDialog({ tag, onClose, onDone }: { tag: Tag; onClose: () => void;
     }
   }
   return (
-    <Dialog title="Rename tag" onClose={onClose} footer={<><Button onClick={onClose}>Cancel</Button><Button variant="dark" onClick={() => void save()} disabled={!name.trim()}>Rename</Button></>}>
-      <form onSubmit={(e) => { e.preventDefault(); void save(); }} style={{ paddingTop: 12 }}>
-        <Input label="Name" value={name} onChange={(e) => setName(e.target.value)} error={error} autoFocus hint={`Renames it on ${num(tag.links)} links.`} />
+    <Dialog
+      title={t("Rename tag")}
+      onClose={onClose}
+      footer={
+        <>
+          <Button onClick={onClose}>{t("Cancel")}</Button>
+          <Button variant="dark" onClick={() => void save()} disabled={!name.trim()}>
+            {t("Rename")}
+          </Button>
+        </>
+      }
+    >
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void save();
+        }}
+        style={{ paddingTop: 12 }}
+      >
+        <Input
+          label={t("Name")}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          error={error}
+          autoFocus
+          hint={tn(tag.links, "Renames it on {n} link.", "Renames it on {n} links.")}
+        />
       </form>
     </Dialog>
   );

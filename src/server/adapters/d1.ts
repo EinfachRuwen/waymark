@@ -1,8 +1,7 @@
 import { type Db, normalize, splitStatements } from "../db";
 
 export function d1Adapter(d1: D1Database): Db {
-  const prep = (sql: string, params?: Parameters<typeof normalize>[0]) =>
-    d1.prepare(sql).bind(...normalize(params));
+  const prep = (sql: string, params?: Parameters<typeof normalize>[0]) => d1.prepare(sql).bind(...normalize(params));
   return {
     async all(sql, params) {
       const r = await prep(sql, params).all();

@@ -42,10 +42,15 @@ export async function createSession(c: Ctx, userId: string) {
   const { db, env } = c.get("platform");
   const token = randomString(48);
   const now = Date.now();
-  await db.run(
-    "INSERT INTO sessions (id, user_id, created_at, expires_at, last_seen_at, ip, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?)",
-    [await sha256(token), userId, now, now + SESSION_DAYS * 864e5, now, c.get("platform").clientIp(c.req.raw), (c.req.header("user-agent") || "").slice(0, 300)],
-  );
+  await db.run("INSERT INTO sessions (id, user_id, created_at, expires_at, last_seen_at, ip, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?)", [
+    await sha256(token),
+    userId,
+    now,
+    now + SESSION_DAYS * 864e5,
+    now,
+    c.get("platform").clientIp(c.req.raw),
+    (c.req.header("user-agent") || "").slice(0, 300),
+  ]);
   await db.run("UPDATE users SET last_login_at = ? WHERE id = ?", [now, userId]);
   setCookie(c, SESSION_COOKIE, token, {
     httpOnly: true,
@@ -94,7 +99,9 @@ export const loadActor: MiddlewareHandler<AppEnv> = async (c, next) => {
     });
     // Coarse last-used timestamp; one write per key per minute at most.
     const p = c.get("platform");
-    p.waitUntil(db.run("UPDATE api_keys SET last_used_at = ? WHERE id = ? AND (last_used_at IS NULL OR last_used_at < ?)", [Date.now(), row.id, Date.now() - 60_000]));
+    p.waitUntil(
+      db.run("UPDATE api_keys SET last_used_at = ? WHERE id = ? AND (last_used_at IS NULL OR last_used_at < ?)", [Date.now(), row.id, Date.now() - 60_000]),
+    );
     return next();
   }
 
@@ -187,20 +194,17 @@ export async function audit(c: Ctx, action: string, targetType: string | null, t
   const label = a ? (a.type === "key" ? `${a.key.name} (key, ${a.user.email})` : a.user.email) : "anonymous";
   p.waitUntil(
     p.db
-      .run(
-        "INSERT INTO audit_log (ts, actor_type, actor_id, actor_label, action, target_type, target_id, detail, ip) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        [
-          Date.now(),
-          a ? a.type : "system",
-          a ? (a.type === "key" ? a.key.id : a.user.id) : null,
-          label,
-          action,
-          targetType,
-          targetId,
-          detail === undefined ? null : JSON.stringify(detail).slice(0, 4000),
-          p.clientIp(c.req.raw),
-        ],
-      )
+      .run("INSERT INTO audit_log (ts, actor_type, actor_id, actor_label, action, target_type, target_id, detail, ip) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+        Date.now(),
+        a ? a.type : "system",
+        a ? (a.type === "key" ? a.key.id : a.user.id) : null,
+        label,
+        action,
+        targetType,
+        targetId,
+        detail === undefined ? null : JSON.stringify(detail).slice(0, 4000),
+        p.clientIp(c.req.raw),
+      ])
       .catch(() => {}),
   );
 }

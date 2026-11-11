@@ -36,12 +36,7 @@ export function geoFromHeaders(h: Headers): Geo {
 }
 
 export function ipFromHeaders(h: Headers): string | null {
-  return (
-    h.get("cf-connecting-ip") ||
-    h.get("x-real-ip") ||
-    h.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    null
-  );
+  return h.get("cf-connecting-ip") || h.get("x-real-ip") || h.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
 }
 
 function safeDecode(s: string) {

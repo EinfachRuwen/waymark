@@ -7,6 +7,7 @@ import { api, type User } from "../lib/api";
 import { ago, initials } from "../lib/format";
 import { useApi } from "../lib/hooks";
 import { useSession } from "../lib/session";
+import { t } from "../lib/i18n";
 
 export function Team() {
   const { me, can } = useSession();
@@ -21,7 +22,7 @@ export function Team() {
   async function update(u: User, body: Partial<{ role: Role; disabled: boolean }>) {
     try {
       await api(`/users/${u.id}`, { method: "PATCH", body });
-      toast("Saved");
+      toast(t("Saved"));
       void reload();
     } catch (e) {
       toast((e as Error).message, "error");
@@ -34,10 +35,18 @@ export function Team() {
   }
 
   async function remove(u: User) {
-    if (!(await confirm({ title: `Remove ${u.name || u.email}?`, body: "Their sessions and API keys stop working. Links they created stay.", confirm: "Remove", danger: true }))) return;
+    if (
+      !(await confirm({
+        title: t("Remove {name}?", { name: u.name || u.email }),
+        body: t("Their sessions and API keys stop working. Links they created stay."),
+        confirm: t("Remove"),
+        danger: true,
+      }))
+    )
+      return;
     try {
       await api(`/users/${u.id}`, { method: "DELETE" });
-      toast("Removed from the team");
+      toast(t("Removed from the team"));
       void reload();
     } catch (e) {
       toast((e as Error).message, "error");
@@ -47,39 +56,86 @@ export function Team() {
   return (
     <div className="page">
       <PageHead
-        title="Team"
-        desc="People who can sign in to this Waymark. Nobody can sign up on their own; every account starts with an invite."
-        actions={write && <Button variant="primary" icon={<UserPlus className="icon" />} onClick={() => setInviting(true)}>Invite</Button>}
+        title={t("Team")}
+        desc={t("People who can sign in to this Waymark. Nobody can sign up on their own; every account starts with an invite.")}
+        actions={
+          write && (
+            <Button variant="primary" icon={<UserPlus className="icon" />} onClick={() => setInviting(true)}>
+              {t("Invite")}
+            </Button>
+          )
+        }
       />
       {error && <ErrorNote error={error} retry={reload} />}
       <div className="panel list-rows">
         {data?.data.map((u) => (
           <div className="list-row" key={u.id} style={{ opacity: u.disabled ? 0.6 : 1 }}>
-            <span className="avatar" style={{ background: "var(--sunken)", color: "var(--ink)" }}>{initials(u.name, u.email)}</span>
+            <span className="avatar" style={{ background: "var(--sunken)", color: "var(--ink)" }}>
+              {initials(u.name, u.email)}
+            </span>
             <div className="grow">
               <div className="title">
-                {u.name || u.email} {u.id === me?.user.id && <span className="faint" style={{ fontWeight: 450 }}>(you)</span>}
+                {u.name || u.email}{" "}
+                {u.id === me?.user.id && (
+                  <span className="faint" style={{ fontWeight: 450 }}>
+                    {t("(you)")}
+                  </span>
+                )}
               </div>
               <div className="sub">
-                {u.email} · {u.pending_invite ? "invite not accepted yet" : `last sign-in ${ago(u.last_login_at)}`}
-                {u.disabled && " · disabled"}
+                {u.email} · {u.pending_invite ? t("invite not accepted yet") : t("last sign-in {ago}", { ago: ago(u.last_login_at) })}
+                {u.disabled && ` · ${t("disabled")}`}
               </div>
             </div>
             {write && u.id !== me?.user.id && (u.role !== "owner" || isOwner) ? (
-              <select className="select" style={{ width: "auto" }} value={u.role} onChange={(e) => void update(u, { role: e.target.value as Role })} aria-label={`Role of ${u.email}`}>
-                {(Object.keys(ROLE_INFO) as Role[]).filter((r) => r !== "owner" || isOwner).map((r) => <option key={r} value={r}>{ROLE_INFO[r].label}</option>)}
+              <select
+                className="select"
+                style={{ width: "auto" }}
+                value={u.role}
+                onChange={(e) => void update(u, { role: e.target.value as Role })}
+                aria-label={`Role of ${u.email}`}
+              >
+                {(Object.keys(ROLE_INFO) as Role[])
+                  .filter((r) => r !== "owner" || isOwner)
+                  .map((r) => (
+                    <option key={r} value={r}>
+                      {t(ROLE_INFO[r].label)}
+                    </option>
+                  ))}
               </select>
             ) : (
-              <span className="chip">{ROLE_INFO[u.role].label}</span>
+              <span className="chip">{t(ROLE_INFO[u.role].label)}</span>
             )}
             {write && u.id !== me?.user.id && (u.role !== "owner" || isOwner) && (
-              <Menu trigger={(p) => <Button size="sm" variant="ghost" icon={<MoreHorizontal className="icon" />} aria-label="More" {...p} />}>
+              <Menu trigger={(p) => <Button size="sm" variant="ghost" icon={<MoreHorizontal className="icon" />} aria-label={t("More")} {...p} />}>
                 {(close) => (
                   <>
-                    <button onClick={() => { close(); void resetLink(u); }}>{u.pending_invite ? "New invite link" : "Password reset link"}</button>
-                    <button onClick={() => { close(); void update(u, { disabled: !u.disabled }); }}>{u.disabled ? "Enable account" : "Disable account"}</button>
+                    <button
+                      onClick={() => {
+                        close();
+                        void resetLink(u);
+                      }}
+                    >
+                      {u.pending_invite ? t("New invite link") : t("Password reset link")}
+                    </button>
+                    <button
+                      onClick={() => {
+                        close();
+                        void update(u, { disabled: !u.disabled });
+                      }}
+                    >
+                      {u.disabled ? t("Enable account") : t("Disable account")}
+                    </button>
                     <hr />
-                    <button className="danger" onClick={() => { close(); void remove(u); }}>Remove from team</button>
+                    <button
+                      className="danger"
+                      onClick={() => {
+                        close();
+                        void remove(u);
+                      }}
+                    >
+                      {t("Remove from team")}
+                    </button>
                   </>
                 )}
               </Menu>
@@ -89,13 +145,15 @@ export function Team() {
       </div>
 
       <section className="panel" style={{ marginTop: 18 }}>
-        <div className="panel-head"><h2>Roles</h2></div>
+        <div className="panel-head">
+          <h2>{t("Roles")}</h2>
+        </div>
         <div className="panel-body">
           <dl className="kv">
             {(Object.keys(ROLE_INFO) as Role[]).map((r) => (
               <div key={r} style={{ display: "contents" }}>
-                <dt style={{ fontWeight: 600, color: "var(--ink)" }}>{ROLE_INFO[r].label}</dt>
-                <dd className="muted">{ROLE_INFO[r].summary}</dd>
+                <dt style={{ fontWeight: 600, color: "var(--ink)" }}>{t(ROLE_INFO[r].label)}</dt>
+                <dd className="muted">{t(ROLE_INFO[r].summary)}</dd>
               </div>
             ))}
           </dl>
@@ -114,10 +172,23 @@ export function Team() {
         />
       )}
       {link && (
-        <Dialog title={link.reset ? "Password reset link" : "Invite link"} onClose={() => setLink(null)} footer={<Button variant="dark" onClick={() => setLink(null)}>Done</Button>}>
+        <Dialog
+          title={link.reset ? t("Password reset link") : t("Invite link")}
+          onClose={() => setLink(null)}
+          footer={
+            <Button variant="dark" onClick={() => setLink(null)}>
+              {t("Done")}
+            </Button>
+          }
+        >
           <div className="stack" style={{ paddingTop: 10 }}>
-            <p className="muted">Send this link to {link.email}. It works once and expires in 7 days. Waymark does not send email itself.</p>
-            <div className="secret"><code>{link.url}</code><CopyButton text={link.url} iconOnly /></div>
+            <p className="muted">
+              {t("Send this link to {email}. It works once and expires in 7 days. Waymark does not send email itself.", { email: link.email })}
+            </p>
+            <div className="secret">
+              <code>{link.url}</code>
+              <CopyButton text={link.url} iconOnly />
+            </div>
           </div>
         </Dialog>
       )}
@@ -143,22 +214,47 @@ function InviteDialog({ isOwner, onClose, onDone }: { isOwner: boolean; onClose:
     }
   }
   return (
-    <Dialog title="Invite someone" onClose={onClose} footer={<><Button onClick={onClose}>Cancel</Button><Button type="submit" form="invite-form" variant="dark" loading={busy}>Create invite</Button></>}>
+    <Dialog
+      title={t("Invite someone")}
+      onClose={onClose}
+      footer={
+        <>
+          <Button onClick={onClose}>{t("Cancel")}</Button>
+          <Button type="submit" form="invite-form" variant="dark" loading={busy}>
+            {t("Create invite")}
+          </Button>
+        </>
+      }
+    >
       <form id="invite-form" onSubmit={submit} className="stack" style={{ paddingTop: 12 }}>
-        <Input label="Email" type="email" required value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} autoFocus />
-        <Input label="Name" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
-        <Field label="Role">
+        <Input label={t("Email")} type="email" required value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} autoFocus />
+        <Input label={t("Name")} value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
+        <Field label={t("Role")}>
           <div className="stack-sm">
-            {(Object.keys(ROLE_INFO) as Role[]).filter((r) => r !== "owner" || isOwner).map((r) => (
-              <label key={r} className="check" style={{ alignItems: "flex-start" }}>
-                <input type="radio" name="role" checked={f.role === r} onChange={() => setF({ ...f, role: r })} style={{ marginTop: 3, accentColor: "var(--ink)" }} />
-                <span><b style={{ fontWeight: 600 }}>{ROLE_INFO[r].label}</b> <span className="muted">— {ROLE_INFO[r].summary}</span></span>
-              </label>
-            ))}
+            {(Object.keys(ROLE_INFO) as Role[])
+              .filter((r) => r !== "owner" || isOwner)
+              .map((r) => (
+                <label key={r} className="check" style={{ alignItems: "flex-start" }}>
+                  <input
+                    type="radio"
+                    name="role"
+                    checked={f.role === r}
+                    onChange={() => setF({ ...f, role: r })}
+                    style={{ marginTop: 3, accentColor: "var(--ink)" }}
+                  />
+                  <span>
+                    <b style={{ fontWeight: 600 }}>{t(ROLE_INFO[r].label)}</b> <span className="muted">— {t(ROLE_INFO[r].summary)}</span>
+                  </span>
+                </label>
+              ))}
           </div>
         </Field>
-        {error && <p className="form-error" role="alert">{error}</p>}
-        <Callout>You get a link to send yourself. It works for 7 days.</Callout>
+        {error && (
+          <p className="form-error" role="alert">
+            {error}
+          </p>
+        )}
+        <Callout>{t("You get a link to send yourself. It works for 7 days.")}</Callout>
       </form>
     </Dialog>
   );

@@ -34,21 +34,76 @@ const d = domains.find((x) => x.is_default)!;
 const user = (await db.first<{ id: string }>("SELECT id FROM users LIMIT 1"))!;
 
 const LINKS = [
-  { slug: "fruehling", url: "https://alpenrad.example/kollektion/fruehling-2026?ref=shortlink", title: "Spring collection launch", tags: ["campaign", "spring"], weight: 9 },
+  {
+    slug: "fruehling",
+    url: "https://alpenrad.example/kollektion/fruehling-2026?ref=shortlink",
+    title: "Spring collection launch",
+    tags: ["campaign", "spring"],
+    weight: 9,
+  },
   { slug: "newsletter", url: "https://alpenrad.example/newsletter/anmelden", title: "Newsletter sign-up", tags: ["newsletter"], weight: 5 },
-  { slug: "app", url: "https://alpenrad.example/app", title: "Ride tracker app", tags: ["app"], weight: 6, rules: [{ type: "os" as const, values: ["ios", "ipados"], url: "https://apps.apple.com/app/id000000" }, { type: "os" as const, values: ["android"], url: "https://play.google.com/store/apps/details?id=example.ride" }] },
+  {
+    slug: "app",
+    url: "https://alpenrad.example/app",
+    title: "Ride tracker app",
+    tags: ["app"],
+    weight: 6,
+    rules: [
+      { type: "os" as const, values: ["ios", "ipados"], url: "https://apps.apple.com/app/id000000" },
+      { type: "os" as const, values: ["android"], url: "https://play.google.com/store/apps/details?id=example.ride" },
+    ],
+  },
   { slug: "werkstatt", url: "https://alpenrad.example/service/termin", title: "Book a workshop slot", tags: ["service"], weight: 3 },
-  { slug: "gravel-test", url: "https://alpenrad.example/gravel/a", title: "Gravel landing A/B", tags: ["campaign", "test"], weight: 4, variants: [{ url: "https://alpenrad.example/gravel/b", weight: 50 }] },
-  { slug: "messe", url: "https://alpenrad.example/events/eurobike", title: "Trade fair booth", tags: ["events"], weight: 2, expires_at: Date.now() - 864e5 * 3 },
+  {
+    slug: "gravel-test",
+    url: "https://alpenrad.example/gravel/a",
+    title: "Gravel landing A/B",
+    tags: ["campaign", "test"],
+    weight: 4,
+    variants: [{ url: "https://alpenrad.example/gravel/b", weight: 50 }],
+  },
+  {
+    slug: "messe",
+    url: "https://alpenrad.example/events/eurobike",
+    title: "Trade fair booth",
+    tags: ["events"],
+    weight: 2,
+    expires_at: Date.now() - 864e5 * 3,
+  },
   { slug: "jobs", url: "https://alpenrad.example/karriere", title: "Careers", tags: ["hr"], weight: 1.5 },
   { slug: "katalog-pdf", url: "https://alpenrad.example/downloads/katalog-2026.pdf", title: "Catalogue PDF", tags: ["print"], weight: 2.5 },
   { slug: "insta", url: "https://instagram.com/alpenrad.example", title: "Instagram profile", tags: ["social"], weight: 3.5 },
   { slug: "garantie", url: "https://alpenrad.example/garantie/registrieren", title: "Warranty registration", tags: ["service", "print"], weight: 1 },
 ];
 
-const COUNTRIES = [["DE", 46, ["Munich", "Berlin", "Hamburg", "Stuttgart", "Cologne"]], ["AT", 18, ["Vienna", "Innsbruck", "Graz"]], ["CH", 14, ["Zurich", "Bern", "Basel"]], ["NL", 6, ["Amsterdam"]], ["IT", 5, ["Bolzano", "Milan"]], ["US", 5, ["New York"]], ["FR", 3, ["Lyon"]], ["GB", 3, ["London"]]] as const;
-const REFS = [[null, 38], ["instagram.com", 20], ["google.com", 12], ["newsletter.alpenrad.example", 14], ["linkedin.com", 6], ["facebook.com", 5], ["t.co", 5]] as const;
-const DEVICES = [["mobile", "iOS", "Safari", 34], ["mobile", "Android", "Chrome", 26], ["desktop", "Windows", "Chrome", 16], ["desktop", "macOS", "Safari", 12], ["desktop", "macOS", "Chrome", 6], ["tablet", "iPadOS", "Safari", 4], ["desktop", "Linux", "Firefox", 2]] as const;
+const COUNTRIES = [
+  ["DE", 46, ["Munich", "Berlin", "Hamburg", "Stuttgart", "Cologne"]],
+  ["AT", 18, ["Vienna", "Innsbruck", "Graz"]],
+  ["CH", 14, ["Zurich", "Bern", "Basel"]],
+  ["NL", 6, ["Amsterdam"]],
+  ["IT", 5, ["Bolzano", "Milan"]],
+  ["US", 5, ["New York"]],
+  ["FR", 3, ["Lyon"]],
+  ["GB", 3, ["London"]],
+] as const;
+const REFS = [
+  [null, 38],
+  ["instagram.com", 20],
+  ["google.com", 12],
+  ["newsletter.alpenrad.example", 14],
+  ["linkedin.com", 6],
+  ["facebook.com", 5],
+  ["t.co", 5],
+] as const;
+const DEVICES = [
+  ["mobile", "iOS", "Safari", 34],
+  ["mobile", "Android", "Chrome", 26],
+  ["desktop", "Windows", "Chrome", 16],
+  ["desktop", "macOS", "Safari", 12],
+  ["desktop", "macOS", "Chrome", 6],
+  ["tablet", "iPadOS", "Safari", 4],
+  ["desktop", "Linux", "Firefox", 2],
+] as const;
 const pick = <T extends readonly unknown[]>(arr: readonly T[], wIdx: number): T => {
   const total = arr.reduce((s, x) => s + (x[wIdx] as number), 0);
   let r = Math.random() * total;
@@ -60,7 +115,11 @@ const pick = <T extends readonly unknown[]>(arr: readonly T[], wIdx: number): T 
 };
 
 for (const l of LINKS) {
-  const { row } = await createLink(db, { url: l.url, slug: l.slug, title: l.title, tags: l.tags, rules: l.rules ?? null, variants: l.variants ?? null, expires_at: l.expires_at ?? null }, { domain: d, userId: user.id, via: "app", onConflict: "skip", createdAt: Date.now() - 864e5 * (20 + Math.random() * 60) });
+  const { row } = await createLink(
+    db,
+    { url: l.url, slug: l.slug, title: l.title, tags: l.tags, rules: l.rules ?? null, variants: l.variants ?? null, expires_at: l.expires_at ?? null },
+    { domain: d, userId: user.id, via: "app", onConflict: "skip", createdAt: Date.now() - 864e5 * (20 + Math.random() * 60) },
+  );
   const existing = await db.first<{ n: number }>("SELECT COUNT(*) AS n FROM clicks WHERE link_id = ?", [row.id]);
   if (existing?.n) continue;
   const stmts = [];
@@ -78,10 +137,33 @@ for (const l of LINKS) {
       const hour = Math.floor(Math.max(0, Math.min(23, 7 + Math.random() * 15 + (Math.random() < 0.3 ? -4 : 0))));
       const ts = new Date(Date.now() - day * 864e5).setHours(hour, Math.floor(Math.random() * 60));
       if (ts > Date.now()) continue;
-      const target = l.variants ? (Math.random() < 0.5 ? "main" : "variant:0") : l.rules ? (os === "iOS" || os === "iPadOS" ? "rule:0" : os === "Android" ? "rule:1" : "main") : "main";
+      const target = l.variants
+        ? Math.random() < 0.5
+          ? "main"
+          : "variant:0"
+        : l.rules
+          ? os === "iOS" || os === "iPadOS"
+            ? "rule:0"
+            : os === "Android"
+              ? "rule:1"
+              : "main"
+          : "main";
       stmts.push({
         sql: "INSERT INTO clicks (link_id, ts, visitor, country, city, referrer, browser, os, device, language, is_bot, is_qr, target) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)",
-        params: [row.id, ts, `v${new Date(ts).toISOString().slice(0, 10)}-${Math.floor(Math.random() * Math.max(2, n * 0.75))}`, cc, cities[Math.floor(Math.random() * cities.length)], ref, browser, os, device, cc === "DE" || cc === "AT" || cc === "CH" ? "de" : cc === "IT" ? "it" : cc === "FR" ? "fr" : cc === "NL" ? "nl" : "en", Math.random() < 0.08 ? 1 : 0, target],
+        params: [
+          row.id,
+          ts,
+          `v${new Date(ts).toISOString().slice(0, 10)}-${Math.floor(Math.random() * Math.max(2, n * 0.75))}`,
+          cc,
+          cities[Math.floor(Math.random() * cities.length)],
+          ref,
+          browser,
+          os,
+          device,
+          cc === "DE" || cc === "AT" || cc === "CH" ? "de" : cc === "IT" ? "it" : cc === "FR" ? "fr" : cc === "NL" ? "nl" : "en",
+          Math.random() < 0.08 ? 1 : 0,
+          target,
+        ],
       });
       total++;
     }

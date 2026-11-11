@@ -34,7 +34,20 @@ export function parseCsv(text: string): string[][] {
 }
 
 const ALIASES: Record<string, string[]> = {
-  url: ["url", "original url", "originalurl", "long url", "long_url", "longurl", "destination", "destination url", "target", "target url", "long link", "redirect url"],
+  url: [
+    "url",
+    "original url",
+    "originalurl",
+    "long url",
+    "long_url",
+    "longurl",
+    "destination",
+    "destination url",
+    "target",
+    "target url",
+    "long link",
+    "redirect url",
+  ],
   slug: ["slug", "path", "keyword", "short code", "shortcode", "back-half", "back half", "custom back-half", "alias", "key"],
   short_url: ["short url", "short_url", "shorturl", "short link", "shortlink", "bitlink", "link", "secureshorturl"],
   title: ["title", "name", "link title"],
@@ -50,7 +63,12 @@ export type Field = keyof typeof ALIASES;
 export const FIELDS = Object.keys(ALIASES) as Field[];
 
 export function detectMapping(headers: string[]): Partial<Record<Field, number>> {
-  const norm = headers.map((h) => h.trim().toLowerCase().replace(/[_\s]+/g, " "));
+  const norm = headers.map((h) =>
+    h
+      .trim()
+      .toLowerCase()
+      .replace(/[_\s]+/g, " "),
+  );
   const out: Partial<Record<Field, number>> = {};
   for (const f of FIELDS) {
     const idx = norm.findIndex((h) => ALIASES[f].map((a) => a.replace(/[_\s]+/g, " ")).includes(h));

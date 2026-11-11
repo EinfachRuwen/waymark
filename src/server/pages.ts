@@ -33,46 +33,71 @@ small{display:block;margin-top:40px;color:var(--ink2);font-size:12px}
 
 const PIN = `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2v12M3 3h8l-2 3 2 3H3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
 
-export function page(opts: { title: string; sign: string; heading: string; body: string; extra?: string; status?: number; noindex?: boolean }) {
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+export type PageLang = "en" | "de";
+
+const TEXT = {
+  en: {
+    notFoundTitle: "Link not found",
+    notFoundHead: "This trail ends here.",
+    notFoundBody: "There is no link at this address. It may have been mistyped, removed, or never existed.",
+    expiredTitle: "Link expired",
+    expiredHead: "This link has expired.",
+    expiredBody: "Its owner set it to stop working after a date or a number of visits. Ask them for a current link.",
+    rootHead: "A private link shortener.",
+    rootBody: "Links on this domain are created by its owners. If you followed a short link and landed here, the link was incomplete.",
+    pwTitle: "Protected link",
+    pwHead: "This link is password protected.",
+    pwBody: "Enter the password you were given to continue.",
+    pwLabel: "Password",
+    pwWrong: "That password is not right. Check it and try again.",
+    pwButton: "Continue",
+  },
+  de: {
+    notFoundTitle: "Link nicht gefunden",
+    notFoundHead: "Hier endet der Weg.",
+    notFoundBody: "Unter dieser Adresse gibt es keinen Link. Vielleicht wurde er vertippt, entfernt oder hat nie existiert.",
+    expiredTitle: "Link abgelaufen",
+    expiredHead: "Dieser Link ist abgelaufen.",
+    expiredBody: "Er wurde so eingestellt, dass er nach einem Datum oder einer Anzahl von Aufrufen nicht mehr funktioniert. Frag nach einem aktuellen Link.",
+    rootHead: "Ein privater Link-Kürzer.",
+    rootBody: "Links auf dieser Domain erstellen ihre Betreiber. Wenn du über einen Kurzlink hier gelandet bist, war der Link unvollständig.",
+    pwTitle: "Geschützter Link",
+    pwHead: "Dieser Link ist passwortgeschützt.",
+    pwBody: "Gib das Passwort ein, das du bekommen hast.",
+    pwLabel: "Passwort",
+    pwWrong: "Das Passwort stimmt nicht. Prüf es und versuch es erneut.",
+    pwButton: "Weiter",
+  },
+} as const;
+
+export function page(opts: { title: string; sign: string; heading: string; body: string; extra?: string; lang?: PageLang }) {
+  return `<!doctype html><html lang="${opts.lang ?? "en"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex"><title>${esc(opts.title)}</title><link rel="icon" href="/_/favicon.svg"><style>${CSS}</style></head>
 <body><main><div class="sign">${PIN}${esc(opts.sign)}</div><h1>${esc(opts.heading)}</h1>${opts.body}${opts.extra ?? ""}</main></body></html>`;
 }
 
-export const notFoundPage = (host: string, path: string) =>
-  page({
-    title: "Link not found",
-    sign: `${host}/${path}`,
-    heading: "This trail ends here.",
-    body: `<p>There is no link at this address. It may have been mistyped, removed, or never existed.</p>`,
-  });
+export const notFoundPage = (host: string, path: string, lang: PageLang = "en") =>
+  page({ lang, title: TEXT[lang].notFoundTitle, sign: `${host}/${path}`, heading: TEXT[lang].notFoundHead, body: `<p>${TEXT[lang].notFoundBody}</p>` });
 
-export const expiredPage = (host: string, slug: string) =>
-  page({
-    title: "Link expired",
+export const expiredPage = (host: string, slug: string, lang: PageLang = "en") =>
+  page({ lang, title: TEXT[lang].expiredTitle, sign: `${host}/${slug}`, heading: TEXT[lang].expiredHead, body: `<p>${TEXT[lang].expiredBody}</p>` });
+
+export const rootPage = (name: string, lang: PageLang = "en") =>
+  page({ lang, title: name, sign: name, heading: TEXT[lang].rootHead, body: `<p>${TEXT[lang].rootBody}</p>` });
+
+export const passwordPage = (host: string, slug: string, error = false, lang: PageLang = "en") => {
+  const x = TEXT[lang];
+  return page({
+    lang,
+    title: x.pwTitle,
     sign: `${host}/${slug}`,
-    heading: "This link has expired.",
-    body: `<p>Its owner set it to stop working after a date or a number of visits. Ask them for a current link.</p>`,
+    heading: x.pwHead,
+    body: `<p>${x.pwBody}</p>`,
+    extra: `<form method="post" autocomplete="off"><label for="pw">${x.pwLabel}</label><input id="pw" name="password" type="password" required autofocus>${
+      error ? `<p class="err" role="alert">${x.pwWrong}</p>` : ""
+    }<button type="submit">${x.pwButton}</button></form>`,
   });
-
-export const rootPage = (name: string) =>
-  page({
-    title: name,
-    sign: name,
-    heading: "A private link shortener.",
-    body: `<p>Links on this domain are created by its owners. If you followed a short link and landed here, the link was incomplete.</p>`,
-  });
-
-export const passwordPage = (host: string, slug: string, error = false) =>
-  page({
-    title: "Protected link",
-    sign: `${host}/${slug}`,
-    heading: "This link is password protected.",
-    body: `<p>Enter the password you were given to continue.</p>`,
-    extra: `<form method="post" autocomplete="off"><label for="pw">Password</label><input id="pw" name="password" type="password" required autofocus>${
-      error ? `<p class="err" role="alert">That password is not right. Check it and try again.</p>` : ""
-    }<button type="submit">Continue</button></form>`,
-  });
+};
 
 /** Serves Open Graph tags to link-preview bots, then forwards humans who land here. */
 export function previewPage(target: string, og: { title?: string | null; description?: string | null; image?: string | null }) {

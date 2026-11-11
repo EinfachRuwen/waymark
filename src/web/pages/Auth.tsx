@@ -3,6 +3,7 @@ import { Button, Input } from "../components/ui";
 import { api } from "../lib/api";
 import { useRouter } from "../lib/router";
 import { useSession } from "../lib/session";
+import { t } from "../lib/i18n";
 
 /** Deterministic topographic contour lines for the sign-in artwork. */
 function Contours() {
@@ -41,10 +42,10 @@ function AuthLayout({ instance, children }: { instance: string; children: ReactN
         <div className="pole" />
         <div className="post">
           <span className="sign">{instance}</span>
-          <span className="sign">Short links</span>
-          <span className="sign">On your own server</span>
+          <span className="sign">{t("Short links")}</span>
+          <span className="sign">{t("On your own server")}</span>
         </div>
-        <footer>Waymark is a private link shortener. Only people with an account can create links here.</footer>
+        <footer>{t("Waymark is a private link shortener. Only people with an account can create links here.")}</footer>
       </aside>
       <div className="auth-form">{children}</div>
     </div>
@@ -76,21 +77,21 @@ export function Login({ instanceName }: { instanceName: string }) {
     <AuthLayout instance={instanceName}>
       <form onSubmit={submit} className="stack">
         <div>
-          <h1>Sign in</h1>
-          <p className="lead">to {instanceName}</p>
+          <h1>{t("Sign in")}</h1>
+          <p className="lead">{t("to {name}", { name: instanceName })}</p>
         </div>
-        <Input label="Email" type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} autoFocus />
-        <Input label="Password" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+        <Input label={t("Email")} type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} autoFocus />
+        <Input label={t("Password")} type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
         {error && (
           <p className="form-error" role="alert">
             {error}
           </p>
         )}
         <Button type="submit" variant="dark" loading={busy}>
-          Sign in
+          {t("Sign in")}
         </Button>
         <p className="faint" style={{ fontSize: 12.5 }}>
-          Forgot your password? An owner or admin can send you a new sign-in link from the Team page.
+          {t("Forgot your password? An owner or admin can send you a new sign-in link from the Team page.")}
         </p>
       </form>
     </AuthLayout>
@@ -99,7 +100,7 @@ export function Login({ instanceName }: { instanceName: string }) {
 
 export function Setup({ tokenRequired }: { tokenRequired: boolean }) {
   const { refresh } = useSession();
-  const [f, setF] = useState({ email: "", name: "", password: "", hostname: location.host, instance_name: "Waymark", token: "" });
+  const [f, setF] = useState({ email: "", name: "", password: "", hostname: location.host, instance_name: t("Waymark"), token: "" });
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) => setF({ ...f, [k]: e.target.value });
@@ -119,25 +120,41 @@ export function Setup({ tokenRequired }: { tokenRequired: boolean }) {
   }
 
   return (
-    <AuthLayout instance={f.instance_name || "Waymark"}>
+    <AuthLayout instance={f.instance_name || t("Waymark")}>
       <form onSubmit={submit} className="stack">
         <div>
-          <h1>Set up Waymark</h1>
-          <p className="lead">Create the owner account. You can invite others afterwards.</p>
+          <h1>{t("Set up Waymark")}</h1>
+          <p className="lead">{t("Create the owner account. You can invite others afterwards.")}</p>
         </div>
         {tokenRequired && (
-          <Input label="Setup token" hint="The value of the SETUP_TOKEN secret you configured." required value={f.token} onChange={set("token")} autoComplete="off" />
+          <Input
+            label={t("Setup token")}
+            hint={t("The value of the SETUP_TOKEN secret you configured.")}
+            required
+            value={f.token}
+            onChange={set("token")}
+            autoComplete="off"
+          />
         )}
-        <Input label="Your name" value={f.name} onChange={set("name")} autoComplete="name" />
-        <Input label="Email" type="email" required value={f.email} onChange={set("email")} autoComplete="username" />
-        <Input label="Password" type="password" required minLength={10} value={f.password} onChange={set("password")} hint="At least 10 characters." autoComplete="new-password" />
+        <Input label={t("Your name")} value={f.name} onChange={set("name")} autoComplete="name" />
+        <Input label={t("Email")} type="email" required value={f.email} onChange={set("email")} autoComplete="username" />
+        <Input
+          label={t("Password")}
+          type="password"
+          required
+          minLength={10}
+          value={f.password}
+          onChange={set("password")}
+          hint={t("At least 10 characters.")}
+          autoComplete="new-password"
+        />
         <div className="grid-2">
-          <Input label="Workspace name" required value={f.instance_name} onChange={set("instance_name")} />
-          <Input label="Short domain" required value={f.hostname} onChange={set("hostname")} className="mono" hint="Add more later." />
+          <Input label={t("Workspace name")} required value={f.instance_name} onChange={set("instance_name")} />
+          <Input label={t("Short domain")} required value={f.hostname} onChange={set("hostname")} className="mono" hint={t("Add more later.")} />
         </div>
         {!tokenRequired && (
           <p className="faint" style={{ fontSize: 12.5 }}>
-            Anyone who opens this page first can claim this Waymark. Set a SETUP_TOKEN secret if the URL is public before you finish.
+            {t("Anyone who opens this page first can claim this Waymark. Set a SETUP_TOKEN secret if the URL is public before you finish.")}
           </p>
         )}
         {error && (
@@ -146,7 +163,7 @@ export function Setup({ tokenRequired }: { tokenRequired: boolean }) {
           </p>
         )}
         <Button type="submit" variant="dark" loading={busy}>
-          Create owner account
+          {t("Create owner account")}
         </Button>
       </form>
     </AuthLayout>
@@ -191,24 +208,33 @@ export function Invite({ token }: { token: string }) {
     <AuthLayout instance="Waymark">
       {loadError ? (
         <div className="stack" style={{ maxWidth: 380 }}>
-          <h1 style={{ fontSize: 26 }}>This link no longer works.</h1>
+          <h1 style={{ fontSize: 26 }}>{t("This link no longer works.")}</h1>
           <p className="muted">{loadError}</p>
         </div>
       ) : (
         <form onSubmit={submit} className="stack">
           <div>
-            <h1>{info?.reset ? "Choose a new password" : "Join the team"}</h1>
-            <p className="lead">{info ? `for ${info.email}` : "Checking your link…"}</p>
+            <h1>{info?.reset ? t("Choose a new password") : t("Join the team")}</h1>
+            <p className="lead">{info ? t("for {email}", { email: info.email }) : t("Checking your link…")}</p>
           </div>
-          {!info?.reset && <Input label="Your name" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />}
-          <Input label="Password" type="password" required minLength={10} hint="At least 10 characters." value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
+          {!info?.reset && <Input label={t("Your name")} value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />}
+          <Input
+            label={t("Password")}
+            type="password"
+            required
+            minLength={10}
+            hint={t("At least 10 characters.")}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="new-password"
+          />
           {error && (
             <p className="form-error" role="alert">
               {error}
             </p>
           )}
           <Button type="submit" variant="dark" loading={busy} disabled={!info}>
-            {info?.reset ? "Save password and sign in" : "Create account"}
+            {info?.reset ? t("Save password and sign in") : t("Create account")}
           </Button>
         </form>
       )}

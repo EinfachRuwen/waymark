@@ -1,25 +1,26 @@
-const nf = new Intl.NumberFormat(undefined);
-const compact = new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 });
+import { lang, t } from "./i18n";
+const nf = new Intl.NumberFormat(lang());
+const compact = new Intl.NumberFormat(lang(), { notation: "compact", maximumFractionDigits: 1 });
 
 export const num = (n: number | null | undefined) => nf.format(n ?? 0);
 export const short = (n: number) => (Math.abs(n) >= 10_000 ? compact.format(n) : nf.format(n));
 
 export function date(ts: number | null | undefined, opts: Intl.DateTimeFormatOptions = { day: "numeric", month: "short", year: "numeric" }) {
   if (!ts) return "—";
-  return new Date(ts).toLocaleDateString(undefined, opts);
+  return new Date(ts).toLocaleDateString(lang(), opts);
 }
 
 export function dateTime(ts: number | null | undefined) {
   if (!ts) return "—";
-  return new Date(ts).toLocaleString(undefined, { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  return new Date(ts).toLocaleString(lang(), { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
-const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
+const rtf = new Intl.RelativeTimeFormat(lang(), { numeric: "auto" });
 export function ago(ts: number | null | undefined) {
-  if (!ts) return "never";
+  if (!ts) return t("never");
   const s = (ts - Date.now()) / 1000;
   const abs = Math.abs(s);
-  if (abs < 45) return "just now";
+  if (abs < 45) return t("just now");
   if (abs < 3600) return rtf.format(Math.round(s / 60), "minute");
   if (abs < 86400) return rtf.format(Math.round(s / 3600), "hour");
   if (abs < 86400 * 30) return rtf.format(Math.round(s / 86400), "day");
@@ -29,9 +30,9 @@ export function ago(ts: number | null | undefined) {
 
 let regionNames: Intl.DisplayNames | null = null;
 export function country(code: string | null | undefined) {
-  if (!code) return "Unknown";
+  if (!code) return t("Unknown");
   try {
-    regionNames ??= new Intl.DisplayNames(undefined, { type: "region" });
+    regionNames ??= new Intl.DisplayNames(lang(), { type: "region" });
     return regionNames.of(code.toUpperCase()) ?? code;
   } catch {
     return code;
@@ -40,9 +41,9 @@ export function country(code: string | null | undefined) {
 
 let langNames: Intl.DisplayNames | null = null;
 export function language(code: string | null | undefined) {
-  if (!code) return "Unknown";
+  if (!code) return t("Unknown");
   try {
-    langNames ??= new Intl.DisplayNames(undefined, { type: "language" });
+    langNames ??= new Intl.DisplayNames(lang(), { type: "language" });
     return langNames.of(code) ?? code;
   } catch {
     return code;

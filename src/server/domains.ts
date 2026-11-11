@@ -25,7 +25,12 @@ export function invalidateDomains() {
 }
 
 export function normalizeHost(h: string) {
-  const host = h.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "").replace(/\.$/, "");
+  const host = h
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, "")
+    .replace(/\/.*$/, "")
+    .replace(/\.$/, "");
   // Keep the port for local development so generated short URLs work.
   if (/^(localhost|127\.0\.0\.1)(:\d+)?$/.test(host)) return host;
   return host.replace(/:\d+$/, "");

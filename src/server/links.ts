@@ -100,19 +100,21 @@ export async function generateSlug(db: Db, d: DomainRow): Promise<string> {
   throw new HttpError(409, "slug_space_exhausted", "Could not find a free slug. Increase the slug length of this domain.");
 }
 
-const ts = z
-  .union([z.number(), z.string(), z.null()])
-  .transform((v, ctx) => {
-    if (v === null || v === "") return null;
-    const n = typeof v === "number" ? v : Date.parse(v);
-    if (!Number.isFinite(n)) {
-      ctx.addIssue({ code: "custom", message: "Expected a timestamp in ms or an ISO date." });
-      return z.NEVER;
-    }
-    return n;
-  });
+const ts = z.union([z.number(), z.string(), z.null()]).transform((v, ctx) => {
+  if (v === null || v === "") return null;
+  const n = typeof v === "number" ? v : Date.parse(v);
+  if (!Number.isFinite(n)) {
+    ctx.addIssue({ code: "custom", message: "Expected a timestamp in ms or an ISO date." });
+    return z.NEVER;
+  }
+  return n;
+});
 
-const str = (max: number) => z.string().max(max).transform((s) => s.trim() || null);
+const str = (max: number) =>
+  z
+    .string()
+    .max(max)
+    .transform((s) => s.trim() || null);
 
 export const linkInput = z.object({
   url: z.string().min(1).max(4096),

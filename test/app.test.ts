@@ -124,12 +124,22 @@ describe("links & redirects", () => {
     expect((await json(await call("GET", `/api/v1/links/${l.id}`))).clicks).toBe(0);
   });
 
+  it("shows visitor pages in German when the browser asks for it", async () => {
+    const r = await call("GET", "/nirgendwo", undefined, { "accept-language": "de-DE,de;q=0.9,en;q=0.8" });
+    expect(r.status).toBe(404);
+    expect(await r.text()).toContain("Hier endet der Weg.");
+  });
+
   it("answers 404 for unknown slugs", async () => {
     expect((await call("GET", "/does-not-exist")).status).toBe(404);
   });
 
   it("bulk creates and skips conflicts", async () => {
-    const r = await json(await call("POST", "/api/v1/links/bulk", { links: [{ url: "https://a.example", slug: "hello" }, { url: "https://b.example", slug: "b1" }, { url: "nope" }] }));
+    const r = await json(
+      await call("POST", "/api/v1/links/bulk", {
+        links: [{ url: "https://a.example", slug: "hello" }, { url: "https://b.example", slug: "b1" }, { url: "nope" }],
+      }),
+    );
     expect(r.created).toBe(1);
     expect(r.skipped).toBe(1);
     expect(r.failed).toBe(1);
@@ -146,7 +156,11 @@ describe("api keys & scopes", () => {
 
   it("allows what the key may do and nothing else", async () => {
     const auth = { authorization: `Bearer ${key}`, cookie: "" };
-    const created = await app.request("http://go.test/api/v1/links", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ url: "https://k.example" }) });
+    const created = await app.request("http://go.test/api/v1/links", {
+      method: "POST",
+      headers: { ...auth, "content-type": "application/json" },
+      body: JSON.stringify({ url: "https://k.example" }),
+    });
     expect(created.status).toBe(201);
     const list = await app.request("http://go.test/api/v1/links", { headers: auth });
     expect(list.status).toBe(403);

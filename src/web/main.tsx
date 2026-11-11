@@ -5,6 +5,7 @@ import { ConfirmProvider, ToastProvider } from "./components/ui";
 import { Router } from "./lib/router";
 import { SessionProvider } from "./lib/session";
 import "./styles.css";
+import { LangProvider } from "./lib/i18n";
 
 try {
   const t = localStorage.getItem("waymark-theme");
@@ -15,14 +16,16 @@ try {
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <Router>
-      <ToastProvider>
-        <ConfirmProvider>
-          <SessionProvider>
-            <App />
-          </SessionProvider>
-        </ConfirmProvider>
-      </ToastProvider>
-    </Router>
+    <LangProvider>
+      <Router>
+        <ToastProvider>
+          <ConfirmProvider>
+            <SessionProvider>
+              <App />
+            </SessionProvider>
+          </ConfirmProvider>
+        </ToastProvider>
+      </Router>
+    </LangProvider>
   </StrictMode>,
 );

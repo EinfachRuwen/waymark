@@ -9,8 +9,9 @@ import { Link, useRouter } from "../lib/router";
 import { useSession } from "../lib/session";
 import { LinkEditor } from "./LinkEditor";
 import { QrDialog, qrSvg } from "./QrDialog";
+import { t } from "../lib/i18n";
 
-const RULE_WORD: Record<string, string> = { country: "Visitors from", device: "On", os: "On", language: "Speaking" };
+const RULE_WORD: Record<string, string> = { country: t("Visitors from"), device: t("On"), os: t("On"), language: t("Speaking") };
 
 function ruleValues(type: string, values: string[]) {
   if (type === "country") return values.map(country).join(", ");
@@ -30,29 +31,56 @@ export function LinkDetail({ id }: { id: string }) {
   const [checking, setChecking] = useState(false);
   const preview = useMemo(() => (l?.short_url ? qrSvg(l.short_url + "?qr", "#000000", "#ffffff") : ""), [l?.short_url]);
 
-  if (error) return <div className="page"><ErrorNote error={error} retry={reload} /></div>;
-  if (!l) return <div className="page"><div className="skeleton" style={{ height: 46, width: 320, marginBottom: 20 }} /><div className="skeleton" style={{ height: 320 }} /></div>;
+  if (error)
+    return (
+      <div className="page">
+        <ErrorNote error={error} retry={reload} />
+      </div>
+    );
+  if (!l)
+    return (
+      <div className="page">
+        <div className="skeleton" style={{ height: 46, width: 320, marginBottom: 20 }} />
+        <div className="skeleton" style={{ height: 320 }} />
+      </div>
+    );
 
   async function setArchived(v: boolean) {
     const u = await api<LinkT>(`/links/${l!.id}`, { method: "PATCH", body: { archived: v } });
     setData(u);
     bumpLinks();
-    toast(v ? "Link archived. It now answers 404." : "Link restored");
+    toast(v ? t("Link archived. It now answers 404.") : t("Link restored"));
   }
 
   async function remove() {
-    if (!(await confirm({ title: `Delete ${l!.domain}/${l!.slug}?`, body: "Its click history is deleted too. This cannot be undone.", confirm: "Delete link", danger: true }))) return;
+    if (
+      !(await confirm({
+        title: t("Delete {link}?", { link: `${l!.domain}/${l!.slug}` }),
+        body: t("Its click history is deleted too. This cannot be undone."),
+        confirm: t("Delete link"),
+        danger: true,
+      }))
+    )
+      return;
     await api(`/links/${l!.id}`, { method: "DELETE" });
     bumpLinks();
-    toast("Link deleted");
+    toast(t("Link deleted"));
     navigate("/links");
   }
 
   async function resetClicks() {
-    if (!(await confirm({ title: "Reset click history?", body: "All recorded clicks for this link are deleted and the counter goes back to zero.", confirm: "Reset", danger: true }))) return;
+    if (
+      !(await confirm({
+        title: t("Reset click history?"),
+        body: t("All recorded clicks for this link are deleted and the counter goes back to zero."),
+        confirm: t("Reset"),
+        danger: true,
+      }))
+    )
+      return;
     await api("/links/actions", { body: { ids: [l!.id], action: "reset_clicks" } });
     bumpLinks();
-    toast("Click history reset");
+    toast(t("Click history reset"));
   }
 
   async function check() {
@@ -71,19 +99,29 @@ export function LinkDetail({ id }: { id: string }) {
       <div className="detail-head">
         <div className="crumbs">
           <Link to="/links" className="row" style={{ gap: 4 }}>
-            <ArrowLeft className="icon" /> Links
+            <ArrowLeft className="icon" /> {t("Links")}
           </Link>
         </div>
         <div className="row" style={{ justifyContent: "space-between", flexWrap: "wrap", gap: 14, alignItems: "center" }}>
           <div className="row" style={{ gap: 12, minWidth: 0, flexWrap: "wrap" }}>
             <Sign host={l.domain} slug={l.slug} size="lg" muted={l.status !== "active"} />
-            <span className={`chip ${statusChip}`}>{l.status}</span>
-            {l.has_password && <span className="chip"><Lock /> password</span>}
+            <span className={`chip ${statusChip}`}>{t(l.status)}</span>
+            {l.has_password && (
+              <span className="chip">
+                <Lock /> {t("password")}
+              </span>
+            )}
           </div>
           <div className="row" style={{ flexWrap: "wrap" }}>
-            {l.short_url && <CopyButton text={l.short_url} label="Copy" size="md" />}
-            <Button icon={<QrCode className="icon" />} onClick={() => setQr(true)}>QR code</Button>
-            {can("links:write") && <Button variant="dark" icon={<Pencil className="icon" />} onClick={() => setEditing(true)}>Edit</Button>}
+            {l.short_url && <CopyButton text={l.short_url} label={t("Copy")} size="md" />}
+            <Button icon={<QrCode className="icon" />} onClick={() => setQr(true)}>
+              {t("QR code")}
+            </Button>
+            {can("links:write") && (
+              <Button variant="dark" icon={<Pencil className="icon" />} onClick={() => setEditing(true)}>
+                {t("Edit")}
+              </Button>
+            )}
           </div>
         </div>
         {l.title && <h1 style={{ fontSize: 20, fontWeight: 620, fontStretch: "90%" }}>{l.title}</h1>}
@@ -92,7 +130,7 @@ export function LinkDetail({ id }: { id: string }) {
       <div className="layout-2">
         <div className="stack" style={{ gap: 18, minWidth: 0 }}>
           <div className="row" style={{ justifyContent: "space-between" }}>
-            <h2 style={{ fontSize: 15, fontWeight: 650 }}>Traffic</h2>
+            <h2 style={{ fontSize: 15, fontWeight: 650 }}>{t("Traffic")}</h2>
             <RangePicker value={range} onChange={setRange} />
           </div>
           <AnalyticsView linkId={l.id} range={range} showTargets={l.rules.length + l.variants.length > 0} />
@@ -100,44 +138,60 @@ export function LinkDetail({ id }: { id: string }) {
 
         <aside className="stack" style={{ gap: 18 }}>
           <section className="panel">
-            <div className="panel-head"><h2>Route</h2></div>
+            <div className="panel-head">
+              <h2>{t("Route")}</h2>
+            </div>
             <div className="panel-body">
               <div className="route">
                 <div className="stop blaze">
-                  <span className="when">Short link</span>
+                  <span className="when">{t("Short link")}</span>
                   <span className="to">{l.short_url}</span>
                 </div>
                 {l.has_password && (
                   <div className="stop">
-                    <span className="when">Password check</span>
+                    <span className="when">{t("Password check")}</span>
                   </div>
                 )}
                 {l.rules.map((r, i) => (
                   <div className="stop" key={i}>
-                    <span className="when">{RULE_WORD[r.type]} {ruleValues(r.type, r.values)}</span>
-                    <a className="to" href={r.url} target="_blank" rel="noreferrer">{r.url}</a>
+                    <span className="when">
+                      {t(RULE_WORD[r.type])} {ruleValues(r.type, r.values)}
+                    </span>
+                    <a className="to" href={r.url} target="_blank" rel="noreferrer">
+                      {r.url}
+                    </a>
                   </div>
                 ))}
                 {l.variants.map((v, i) => (
                   <div className="stop" key={`v${i}`}>
-                    <span className="when">{v.weight}% of visitors</span>
-                    <a className="to" href={v.url} target="_blank" rel="noreferrer">{v.url}</a>
+                    <span className="when">{t("{n} of visitors", { n: `${v.weight}%` })}</span>
+                    <a className="to" href={v.url} target="_blank" rel="noreferrer">
+                      {v.url}
+                    </a>
                   </div>
                 ))}
                 <div className="stop end">
                   <span className="when">
-                    {l.rules.length || l.variants.length ? `Everyone else${l.variants.length ? ` · ${Math.max(0, 100 - l.variants.reduce((s, v) => s + v.weight, 0))}%` : ""}` : "Destination"}
+                    {l.rules.length || l.variants.length
+                      ? `${t("Everyone else")}${l.variants.length ? ` · ${Math.max(0, 100 - l.variants.reduce((s, v) => s + v.weight, 0))}%` : ""}`
+                      : t("Destination")}
                   </span>
-                  <a className="to" href={l.url} target="_blank" rel="noreferrer" title={l.url}>{l.url}</a>
+                  <a className="to" href={l.url} target="_blank" rel="noreferrer" title={l.url}>
+                    {l.url}
+                  </a>
                 </div>
               </div>
               <div className="row" style={{ marginTop: 12, gap: 8, flexWrap: "wrap" }}>
-                <Button size="sm" icon={<Activity className="icon" />} loading={checking} onClick={() => void check()}>Check destination</Button>
-                <a className="btn sm ghost" href={l.url} target="_blank" rel="noreferrer"><ExternalLink className="icon" /> Open</a>
+                <Button size="sm" icon={<Activity className="icon" />} loading={checking} onClick={() => void check()}>
+                  {t("Check destination")}
+                </Button>
+                <a className="btn sm ghost" href={l.url} target="_blank" rel="noreferrer">
+                  <ExternalLink className="icon" /> {t("Open")}
+                </a>
               </div>
               {health && (
                 <p style={{ fontSize: 12.5, marginTop: 10, color: health.ok ? "var(--moss)" : "var(--ember)" }} role="status">
-                  {health.status ? `Answered ${health.status} in ${num(health.ms)} ms` : health.error}
+                  {health.status ? t("Answered {s} in {ms} ms", { s: health.status, ms: num(health.ms) }) : health.error}
                   {health.location ? ` → ${health.location}` : ""}
                 </p>
               )}
@@ -145,33 +199,91 @@ export function LinkDetail({ id }: { id: string }) {
           </section>
 
           <section className="panel">
-            <div className="panel-head"><h2>Details</h2></div>
+            <div className="panel-head">
+              <h2>{t("Details")}</h2>
+            </div>
             <div className="panel-body">
               <dl className="kv">
-                <dt>Total clicks</dt>
-                <dd className="num">{num(l.clicks)}{l.max_clicks ? ` of ${num(l.max_clicks)}` : ""}</dd>
-                <dt>Last click</dt>
+                <dt>{t("Total clicks")}</dt>
+                <dd className="num">{l.max_clicks ? t("{n} of {max}", { n: num(l.clicks), max: num(l.max_clicks) }) : num(l.clicks)}</dd>
+                <dt>{t("Last click")}</dt>
                 <dd>{ago(l.last_click_at)}</dd>
-                <dt>Created</dt>
+                <dt>{t("Created")}</dt>
                 <dd>{dateTime(l.created_at)}</dd>
-                {l.created_via && <><dt>Via</dt><dd>{l.created_via}</dd></>}
-                {l.starts_at && <><dt>Active from</dt><dd>{dateTime(l.starts_at)}</dd></>}
-                {l.expires_at && <><dt>Expires</dt><dd>{dateTime(l.expires_at)}</dd></>}
-                {l.expired_url && <><dt>Then</dt><dd className="mono" style={{ fontSize: 12 }}>{l.expired_url}</dd></>}
-                <dt>Redirect</dt>
-                <dd>{l.cloak ? "Framed (URL stays)" : l.redirect_type ?? "Default"}</dd>
-                {l.utm && <><dt>UTM</dt><dd className="mono" style={{ fontSize: 12 }}>{Object.entries(l.utm).map(([k, v]) => `${k}=${v}`).join(" · ")}</dd></>}
-                {l.tags.length > 0 && <><dt>Tags</dt><dd><div className="tags">{l.tags.map((t) => <Link key={t} to={`/links?tag=${encodeURIComponent(t)}`} className="tag" style={{ textDecoration: "none" }}>{t}</Link>)}</div></dd></>}
-                {l.notes && <><dt>Notes</dt><dd style={{ whiteSpace: "pre-wrap" }}>{l.notes}</dd></>}
-                <dt>ID</dt>
-                <dd className="mono faint" style={{ fontSize: 11.5 }}>{l.id}</dd>
+                {l.created_via && (
+                  <>
+                    <dt>{t("Via")}</dt>
+                    <dd>{l.created_via}</dd>
+                  </>
+                )}
+                {l.starts_at && (
+                  <>
+                    <dt>{t("Active from")}</dt>
+                    <dd>{dateTime(l.starts_at)}</dd>
+                  </>
+                )}
+                {l.expires_at && (
+                  <>
+                    <dt>{t("Expires")}</dt>
+                    <dd>{dateTime(l.expires_at)}</dd>
+                  </>
+                )}
+                {l.expired_url && (
+                  <>
+                    <dt>{t("Then")}</dt>
+                    <dd className="mono" style={{ fontSize: 12 }}>
+                      {l.expired_url}
+                    </dd>
+                  </>
+                )}
+                <dt>{t("Redirect")}</dt>
+                <dd>{l.cloak ? t("Framed (URL stays)") : (l.redirect_type ?? t("Default"))}</dd>
+                {l.utm && (
+                  <>
+                    <dt>{t("UTM")}</dt>
+                    <dd className="mono" style={{ fontSize: 12 }}>
+                      {Object.entries(l.utm)
+                        .map(([k, v]) => `${k}=${v}`)
+                        .join(" · ")}
+                    </dd>
+                  </>
+                )}
+                {l.tags.length > 0 && (
+                  <>
+                    <dt>{t("Tags")}</dt>
+                    <dd>
+                      <div className="tags">
+                        {l.tags.map((t) => (
+                          <Link key={t} to={`/links?tag=${encodeURIComponent(t)}`} className="tag" style={{ textDecoration: "none" }}>
+                            {t}
+                          </Link>
+                        ))}
+                      </div>
+                    </dd>
+                  </>
+                )}
+                {l.notes && (
+                  <>
+                    <dt>{t("Notes")}</dt>
+                    <dd style={{ whiteSpace: "pre-wrap" }}>{l.notes}</dd>
+                  </>
+                )}
+                <dt>{t("ID")}</dt>
+                <dd className="mono faint" style={{ fontSize: 11.5 }}>
+                  {l.id}
+                </dd>
               </dl>
             </div>
           </section>
 
           <section className="panel">
             <div className="panel-body">
-              <button className="qr-box" style={{ background: "none", border: 0, cursor: "pointer", width: "100%", padding: 0 }} onClick={() => setQr(true)} aria-label="Open QR code options">
+              <button
+                className="qr-box"
+                style={{ background: "none", border: 0, cursor: "pointer", width: "100%", padding: 0 }}
+                onClick={() => setQr(true)}
+                aria-label={t("Open QR code options")}
+              >
                 <div className="qr" style={{ maxWidth: 150 }} dangerouslySetInnerHTML={{ __html: preview }} />
               </button>
             </div>
@@ -180,12 +292,24 @@ export function LinkDetail({ id }: { id: string }) {
           {can("links:write") && (
             <div className="row" style={{ flexWrap: "wrap" }}>
               {l.archived ? (
-                <Button size="sm" icon={<ArchiveRestore className="icon" />} onClick={() => void setArchived(false)}>Restore</Button>
+                <Button size="sm" icon={<ArchiveRestore className="icon" />} onClick={() => void setArchived(false)}>
+                  {t("Restore")}
+                </Button>
               ) : (
-                <Button size="sm" icon={<Archive className="icon" />} onClick={() => void setArchived(true)}>Archive</Button>
+                <Button size="sm" icon={<Archive className="icon" />} onClick={() => void setArchived(true)}>
+                  {t("Archive")}
+                </Button>
               )}
-              {can("links:delete") && <Button size="sm" icon={<RotateCcw className="icon" />} onClick={() => void resetClicks()}>Reset clicks</Button>}
-              {can("links:delete") && <Button size="sm" variant="danger" icon={<Trash2 className="icon" />} onClick={() => void remove()}>Delete</Button>}
+              {can("links:delete") && (
+                <Button size="sm" icon={<RotateCcw className="icon" />} onClick={() => void resetClicks()}>
+                  {t("Reset clicks")}
+                </Button>
+              )}
+              {can("links:delete") && (
+                <Button size="sm" variant="danger" icon={<Trash2 className="icon" />} onClick={() => void remove()}>
+                  {t("Delete")}
+                </Button>
+              )}
             </div>
           )}
         </aside>

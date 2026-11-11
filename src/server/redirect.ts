@@ -30,6 +30,8 @@ export async function handleRedirect(c: Ctx): Promise<Response> {
     path = reqUrl.pathname.slice(1);
   }
   const domain = await domainForHost(db, c.req.header("host"));
+  const lang = (c.req.header("accept-language") || "").split(",")[0]?.split(/[-;]/)[0]?.trim().toLowerCase() || null;
+  const pl = lang === "de" ? "de" : "en";
 
   if (!domain) {
     // Fresh install: nothing configured yet.
@@ -39,7 +41,7 @@ export async function handleRedirect(c: Ctx): Promise<Response> {
 
   if (!path) {
     if (domain.root_redirect) return redirect(domain.root_redirect, 302);
-    return html(rootPage(settings.instance_name));
+    return html(rootPage(settings.instance_name, pl));
   }
 
   const link = await db.first<LinkRow>("SELECT * FROM links WHERE domain_id = ? AND slug_key = ?", [domain.id, slugKey(domain, path)]);
@@ -47,12 +49,12 @@ export async function handleRedirect(c: Ctx): Promise<Response> {
 
   if (!link || link.archived || (link.starts_at && link.starts_at > now)) {
     if (domain.not_found_redirect) return redirect(domain.not_found_redirect, 302);
-    return html(notFoundPage(domain.hostname, path), 404);
+    return html(notFoundPage(domain.hostname, path, pl), 404);
   }
 
   if ((link.expires_at && link.expires_at <= now) || (link.max_clicks && link.clicks >= link.max_clicks)) {
     if (link.expired_url) return redirect(link.expired_url, 302);
-    return html(expiredPage(domain.hostname, link.slug), 410);
+    return html(expiredPage(domain.hostname, link.slug, pl), 410);
   }
 
   const ua = parseUa(c.req.header("user-agent"));
@@ -66,7 +68,7 @@ export async function handleRedirect(c: Ctx): Promise<Response> {
       if (c.req.method === "POST") {
         const form = await c.req.parseBody().catch(() => ({}) as Record<string, unknown>);
         const ok = await verifyPassword(String(form.password ?? ""), link.password_hash);
-        if (!ok) return html(passwordPage(domain.hostname, link.slug, true), 401);
+        if (!ok) return html(passwordPage(domain.hostname, link.slug, true, pl), 401);
         setCookie(c, cookieName, expected, {
           httpOnly: true,
           secure: p.env.DEV !== "1",
@@ -76,7 +78,7 @@ export async function handleRedirect(c: Ctx): Promise<Response> {
         });
         passwordJustEntered = true;
       } else {
-        return html(passwordPage(domain.hostname, link.slug));
+        return html(passwordPage(domain.hostname, link.slug, false, pl));
       }
     }
   }
@@ -86,7 +88,6 @@ export async function handleRedirect(c: Ctx): Promise<Response> {
     return html(previewPage(link.url, { title: link.og_title, description: link.og_description, image: link.og_image }));
   }
 
-  const lang = (c.req.header("accept-language") || "").split(",")[0]?.split(/[-;]/)[0]?.trim().toLowerCase() || null;
   const picked = pickTarget(link, ua, geo, lang);
   const isQr = reqUrl.searchParams.has("qr");
   const target = buildTarget(picked.url, link, reqUrl.searchParams);
@@ -106,8 +107,7 @@ function pickTarget(link: LinkRow, ua: UaInfo, geo: Geo, lang: string | null): {
     const rules = JSON.parse(link.rules) as Rule[];
     for (let i = 0; i < rules.length; i++) {
       const r = rules[i];
-      const v =
-        r.type === "country" ? geo.country?.toUpperCase() : r.type === "device" ? ua.device : r.type === "os" ? ua.os.toLowerCase() : lang;
+      const v = r.type === "country" ? geo.country?.toUpperCase() : r.type === "device" ? ua.device : r.type === "os" ? ua.os.toLowerCase() : lang;
       if (v && r.values.includes(v)) return { url: r.url, label: `rule:${i}` };
     }
   }
@@ -164,7 +164,22 @@ async function recordClick(c: Ctx, link: LinkRow, secret: string, ua: UaInfo, ge
     {
       sql: `INSERT INTO clicks (link_id, ts, visitor, country, region, city, referrer, browser, os, device, language, is_bot, is_qr, target)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      params: [link.id, now, visitor, geo.country ?? null, geo.region ?? null, geo.city ?? null, referrer, ua.browser, ua.os, ua.device, lang, ua.bot, isQr, target],
+      params: [
+        link.id,
+        now,
+        visitor,
+        geo.country ?? null,
+        geo.region ?? null,
+        geo.city ?? null,
+        referrer,
+        ua.browser,
+        ua.os,
+        ua.device,
+        lang,
+        ua.bot,
+        isQr,
+        target,
+      ],
     },
     { sql: "UPDATE links SET clicks = clicks + 1, last_click_at = ? WHERE id = ?", params: [now, link.id] },
   ]);

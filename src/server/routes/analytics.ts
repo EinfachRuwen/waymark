@@ -88,10 +88,7 @@ r.get("/analytics", requireScope("analytics:read"), async (c) => {
           `SELECT link_id, COUNT(*) AS clicks FROM clicks WHERE ${where} GROUP BY 1 ORDER BY 2 DESC LIMIT ${limit}`,
           params,
         ),
-    db.all<{ h: number; clicks: number }>(
-      `SELECT ((ts + ${tz}) / 3600000) % 24 AS h, COUNT(*) AS clicks FROM clicks WHERE ${where} GROUP BY 1`,
-      params,
-    ),
+    db.all<{ h: number; clicks: number }>(`SELECT ((ts + ${tz}) / 3600000) % 24 AS h, COUNT(*) AS clicks FROM clicks WHERE ${where} GROUP BY 1`, params),
   ]);
 
   // Zero-fill the series so charts can draw continuous ground.
@@ -111,7 +108,14 @@ r.get("/analytics", requireScope("analytics:read"), async (c) => {
     topLinks = top.map((t) => {
       const l = rows.find((x) => x.id === t.link_id);
       const d = l && domains.find((x) => x.id === l.domain_id);
-      return { id: t.link_id, clicks: t.clicks, slug: l?.slug ?? null, title: l?.title ?? null, url: l?.url ?? null, short_url: d && l ? shortUrl(d, l.slug) : null };
+      return {
+        id: t.link_id,
+        clicks: t.clicks,
+        slug: l?.slug ?? null,
+        title: l?.title ?? null,
+        url: l?.url ?? null,
+        short_url: d && l ? shortUrl(d, l.slug) : null,
+      };
     });
   }
 
@@ -154,7 +158,10 @@ r.get("/analytics/export.csv", requireScope("analytics:read"), async (c) => {
   const { where, params } = await scope(c);
   const rows = await db.all<Record<string, unknown>>(
     `SELECT c.ts, l.slug, c.country, c.region, c.city, c.referrer, c.browser, c.os, c.device, c.language, c.is_bot, c.is_qr, c.target
-     FROM clicks c LEFT JOIN links l ON l.id = c.link_id WHERE ${where.replace(/\bts\b/g, "c.ts").replace(/\blink_id\b/g, "c.link_id").replace(/\bis_bot\b/g, "c.is_bot")}
+     FROM clicks c LEFT JOIN links l ON l.id = c.link_id WHERE ${where
+       .replace(/\bts\b/g, "c.ts")
+       .replace(/\blink_id\b/g, "c.link_id")
+       .replace(/\bis_bot\b/g, "c.is_bot")}
      ORDER BY c.ts DESC LIMIT 100000`,
     params,
   );
@@ -162,7 +169,21 @@ r.get("/analytics/export.csv", requireScope("analytics:read"), async (c) => {
   const lines = [cols.join(",")];
   for (const r of rows) {
     lines.push(
-      [new Date(Number(r.ts)).toISOString(), r.slug, r.country, r.region, r.city, r.referrer, r.browser, r.os, r.device, r.language, r.is_bot, r.is_qr, r.target]
+      [
+        new Date(Number(r.ts)).toISOString(),
+        r.slug,
+        r.country,
+        r.region,
+        r.city,
+        r.referrer,
+        r.browser,
+        r.os,
+        r.device,
+        r.language,
+        r.is_bot,
+        r.is_qr,
+        r.target,
+      ]
         .map(csvEscape)
         .join(","),
     );

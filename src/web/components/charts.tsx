@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { num } from "../lib/format";
+import { lang, t, tn } from "../lib/i18n";
 
 function useWidth<T extends HTMLElement>() {
   const ref = useRef<T>(null);
@@ -27,7 +28,15 @@ function niceMax(v: number) {
  * click count, contour lines mark the scale, and the highest point is the
  * summit, labelled with its date.
  */
-export function ElevationChart({ series, bucket, height = 220 }: { series: { t: number; clicks: number; visitors: number }[]; bucket: "day" | "hour"; height?: number }) {
+export function ElevationChart({
+  series,
+  bucket,
+  height = 220,
+}: {
+  series: { t: number; clicks: number; visitors: number }[];
+  bucket: "day" | "hour";
+  height?: number;
+}) {
   const [ref, width] = useWidth<HTMLDivElement>();
   const [hover, setHover] = useState<number | null>(null);
   const pad = { l: 8, r: 44, t: 26, b: 26 };
@@ -55,12 +64,12 @@ export function ElevationChart({ series, bucket, height = 220 }: { series: { t: 
 
   const fmt = (t: number) =>
     bucket === "hour"
-      ? new Date(t).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })
-      : new Date(t).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+      ? new Date(t).toLocaleTimeString(lang(), { hour: "2-digit", minute: "2-digit" })
+      : new Date(t).toLocaleDateString(lang(), { day: "numeric", month: "short" });
   const fmtLong = (t: number) =>
     bucket === "hour"
-      ? new Date(t).toLocaleString(undefined, { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
-      : new Date(t).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "long" });
+      ? new Date(t).toLocaleString(lang(), { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
+      : new Date(t).toLocaleDateString(lang(), { weekday: "short", day: "numeric", month: "long" });
 
   const ticks = [0.25, 0.5, 0.75, 1].map((f) => f * max);
   const labelEvery = Math.max(1, Math.ceil(n / Math.max(2, Math.floor(w / 90))));
@@ -81,7 +90,11 @@ export function ElevationChart({ series, bucket, height = 220 }: { series: { t: 
         <svg
           height={height}
           role="img"
-          aria-label={`${num(total)} clicks over ${n} ${bucket === "day" ? "days" : "hours"}${peak >= 0 ? `, peak of ${num(series[peak].clicks)} on ${fmtLong(series[peak].t)}` : ""}.`}
+          aria-label={
+            tn(total, "{n} click over {span}", "{n} clicks over {span}", {
+              span: tn(n, bucket === "day" ? "{n} day" : "{n} hour", bucket === "day" ? "{n} days" : "{n} hours"),
+            }) + (peak >= 0 ? t(", peak of {c} on {d}", { c: num(series[peak].clicks), d: fmtLong(series[peak].t) }) : "")
+          }
           onPointerMove={onMove}
           onPointerLeave={() => setHover(null)}
         >
@@ -107,7 +120,7 @@ export function ElevationChart({ series, bucket, height = 220 }: { series: { t: 
                 fill="var(--ink)"
                 textAnchor={x(peak) > pad.l + w - 60 ? "end" : x(peak) < pad.l + 60 ? "start" : "middle"}
               >
-                Peak {num(series[peak].clicks)} · {fmt(series[peak].t)}
+                {t("Peak")} {num(series[peak].clicks)} · {fmt(series[peak].t)}
               </text>
             </g>
           )}
@@ -130,21 +143,34 @@ export function ElevationChart({ series, bucket, height = 220 }: { series: { t: 
         <div className="chart-tip" style={{ left: x(hover), top: y(hv.clicks) }}>
           {fmtLong(hv.t)}
           <br />
-          <b>{num(hv.clicks)}</b> clicks · <b>{num(hv.visitors)}</b> visitors
+          <b>{num(hv.clicks)}</b> {t("clicks ·")} <b>{num(hv.visitors)}</b> {t("visitors")}
         </div>
       )}
     </div>
   );
 }
 
-export function BarList({ items, render, empty = "No data in this period." }: { items: { key: string | null; clicks: number }[]; render?: (key: string | null) => ReactNode; empty?: string }) {
+export function BarList({
+  items,
+  render,
+  empty = t("No data in this period."),
+}: {
+  items: { key: string | null; clicks: number }[];
+  render?: (key: string | null) => ReactNode;
+  empty?: string;
+}) {
   const max = Math.max(1, ...items.map((i) => i.clicks));
-  if (!items.length) return <p className="faint" style={{ fontSize: 13, padding: "6px 0" }}>{empty}</p>;
+  if (!items.length)
+    return (
+      <p className="faint" style={{ fontSize: 13, padding: "6px 0" }}>
+        {empty}
+      </p>
+    );
   return (
     <div className="barlist">
       {items.map((i) => (
         <div className="item" key={String(i.key)} style={{ ["--w" as string]: `${(i.clicks / max) * 100}%` }}>
-          <span className="k">{render ? render(i.key) : (i.key ?? "Unknown")}</span>
+          <span className="k">{render ? render(i.key) : (i.key ?? t("Unknown"))}</span>
           <span className="v">{num(i.clicks)}</span>
         </div>
       ))}
@@ -158,11 +184,11 @@ export function HourStrip({ hourly }: { hourly: number[] }) {
   const best = hourly.indexOf(Math.max(...hourly));
   return (
     <div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(24, 1fr)", gap: 2 }} role="img" aria-label={`Busiest hour: ${best}:00`}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(24, 1fr)", gap: 2 }} role="img" aria-label={t("Busiest hour: {h}:00", { h: best })}>
         {hourly.map((v, h) => (
           <div
             key={h}
-            title={`${String(h).padStart(2, "0")}:00 — ${num(v)} clicks`}
+            title={`${String(h).padStart(2, "0")}:00 — ${num(v)} ${t("clicks")}`}
             style={{
               height: 28,
               borderRadius: 3,

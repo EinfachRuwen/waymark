@@ -38,7 +38,9 @@ import { SettingsPage } from "./pages/Settings";
 import { Audit } from "./pages/Audit";
 import { Account } from "./pages/Account";
 import { ApiDocs } from "./pages/ApiDocs";
-import type { Scope } from "../shared/permissions";
+import { ROLE_INFO, type Scope } from "../shared/permissions";
+import { useLang } from "./lib/i18n";
+import { t } from "./lib/i18n";
 
 export function App() {
   const { state, me } = useSession();
@@ -53,17 +55,17 @@ export function App() {
 }
 
 const NAV: { to: string; label: string; icon: typeof Link2; scope?: Scope; admin?: boolean; group?: string }[] = [
-  { to: "/", label: "Overview", icon: BarChart3, scope: "analytics:read" },
-  { to: "/links", label: "Links", icon: Link2, scope: "links:read" },
-  { to: "/tags", label: "Tags", icon: Tags, scope: "links:read" },
-  { to: "/domains", label: "Domains", icon: Globe, scope: "domains:read" },
-  { to: "/import", label: "Import & export", icon: Upload, scope: "links:write" },
-  { to: "/team", label: "Team", icon: Users, scope: "users:read", group: "Workspace" },
-  { to: "/keys", label: "API keys", icon: KeyRound, group: "Workspace" },
-  { to: "/webhooks", label: "Webhooks", icon: Webhook, scope: "webhooks:write", group: "Workspace" },
-  { to: "/audit", label: "Audit log", icon: History, scope: "audit:read", group: "Workspace" },
-  { to: "/settings", label: "Settings", icon: SettingsIcon, admin: true, group: "Workspace" },
-  { to: "/api", label: "API reference", icon: Code2, group: "Workspace" },
+  { to: "/", label: t("Overview"), icon: BarChart3, scope: "analytics:read" },
+  { to: "/links", label: t("Links"), icon: Link2, scope: "links:read" },
+  { to: "/tags", label: t("Tags"), icon: Tags, scope: "links:read" },
+  { to: "/domains", label: t("Domains"), icon: Globe, scope: "domains:read" },
+  { to: "/import", label: t("Import & export"), icon: Upload, scope: "links:write" },
+  { to: "/team", label: t("Team"), icon: Users, scope: "users:read", group: t("Workspace") },
+  { to: "/keys", label: t("API keys"), icon: KeyRound, group: t("Workspace") },
+  { to: "/webhooks", label: t("Webhooks"), icon: Webhook, scope: "webhooks:write", group: t("Workspace") },
+  { to: "/audit", label: t("Audit log"), icon: History, scope: "audit:read", group: t("Workspace") },
+  { to: "/settings", label: t("Settings"), icon: SettingsIcon, admin: true, group: t("Workspace") },
+  { to: "/api", label: t("API reference"), icon: Code2, group: t("Workspace") },
 ];
 
 function Shell() {
@@ -72,6 +74,7 @@ function Shell() {
   const [railOpen, setRailOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const toast = useToast();
+  const { lang, setLang } = useLang();
   const [theme, setTheme] = useState(() => document.documentElement.dataset.theme || "");
 
   useEffect(() => setRailOpen(false), [path]);
@@ -107,7 +110,7 @@ function Shell() {
 
   return (
     <div className="shell">
-      <nav className={`rail ${railOpen ? "open" : ""}`} aria-label="Main">
+      <nav className={`rail ${railOpen ? "open" : ""}`} aria-label={t("Main")}>
         <Link to="/" className="brand" style={{ color: "inherit" }}>
           <span className="brand-mark" aria-hidden>
             <svg viewBox="0 0 16 16">
@@ -115,13 +118,13 @@ function Shell() {
             </svg>
           </span>
           <span>
-            <span className="brand-name">Waymark</span>
+            <span className="brand-name">{t("Waymark")}</span>
             {me!.settings.instance_name !== "Waymark" && <span className="brand-sub">{me!.settings.instance_name}</span>}
           </span>
         </Link>
         {can("links:write") && (
           <Button variant="primary" icon={<Plus className="icon" />} onClick={() => setCreating(true)} style={{ margin: "0 4px 10px" }}>
-            New link <kbd style={{ marginLeft: "auto", background: "transparent", borderColor: "rgb(27 26 16 / .3)", color: "inherit" }}>N</kbd>
+            {t("New link")} <kbd style={{ marginLeft: "auto", background: "transparent", borderColor: "rgb(27 26 16 / .3)", color: "inherit" }}>N</kbd>
           </Button>
         )}
         {items.map((n) => {
@@ -133,31 +136,45 @@ function Shell() {
               {head}
               <Link to={n.to} className="nav" aria-current={active(n.to) ? "page" : undefined}>
                 <I className="icon" />
-                {n.label}
+                {t(n.label)}
               </Link>
             </div>
           );
         })}
         <div className="rail-foot">
-          <Link to="/account" className="avatar" aria-label="Your account" style={{ textDecoration: "none" }}>
+          <Link to="/account" className="avatar" aria-label={t("Your account")} style={{ textDecoration: "none" }}>
             {initials(me!.user.name, me!.user.email)}
           </Link>
           <div className="who">
             <b>{me!.user.name || me!.user.email}</b>
-            <span>{me!.user.role[0].toUpperCase() + me!.user.role.slice(1)}</span>
+            <span>{t(ROLE_INFO[me!.user.role].label)}</span>
           </div>
-          <button className="icon-btn" onClick={toggleTheme} aria-label={isDark ? "Use light theme" : "Use dark theme"} title={isDark ? "Light theme" : "Dark theme"}>
+          <button
+            className="icon-btn"
+            onClick={() => setLang(lang === "de" ? "en" : "de")}
+            aria-label={lang === "de" ? "Switch to English" : "Auf Deutsch umstellen"}
+            title={lang === "de" ? "English" : "Deutsch"}
+            style={{ font: "600 11px/1 var(--font)", letterSpacing: ".04em" }}
+          >
+            {lang === "de" ? "EN" : "DE"}
+          </button>
+          <button
+            className="icon-btn"
+            onClick={toggleTheme}
+            aria-label={isDark ? t("Use light theme") : t("Use dark theme")}
+            title={isDark ? t("Light theme") : t("Dark theme")}
+          >
             {isDark ? <Sun className="icon" /> : <Moon className="icon" />}
           </button>
           <button
             className="icon-btn"
-            aria-label="Sign out"
-            title="Sign out"
+            aria-label={t("Sign out")}
+            title={t("Sign out")}
             onClick={async () => {
               await api("/auth/logout", { method: "POST", body: {} });
               await refresh();
               navigate("/", { replace: true });
-              toast("Signed out");
+              toast(t("Signed out"));
             }}
           >
             <LogOut className="icon" />
@@ -167,15 +184,15 @@ function Shell() {
       {railOpen && <div className="scrim" style={{ zIndex: 44 }} onClick={() => setRailOpen(false)} />}
       <div style={{ minWidth: 0 }}>
         <div className="mobile-bar">
-          <button className="icon-btn" aria-label="Open menu" onClick={() => setRailOpen(true)}>
+          <button className="icon-btn" aria-label={t("Open menu")} onClick={() => setRailOpen(true)}>
             <MenuIcon className="icon" />
           </button>
           <span className="brand-name" style={{ flex: 1 }}>
-            Waymark
+            {t("Waymark")}
           </span>
           {can("links:write") && (
             <Button variant="primary" size="sm" icon={<Plus className="icon" />} onClick={() => setCreating(true)}>
-              New
+              {t("New")}
             </Button>
           )}
         </div>
@@ -234,8 +251,8 @@ function Routes() {
         <div className="page">
           <div className="empty">
             <span className="sign muted-sign">{path}</span>
-            <h3>This page does not exist.</h3>
-            <Link to="/">Back to the overview</Link>
+            <h3>{t("This page does not exist.")}</h3>
+            <Link to="/">{t("Back to the overview")}</Link>
           </div>
         </div>
       );
@@ -246,8 +263,8 @@ function NoAccess() {
   return (
     <div className="page">
       <div className="empty">
-        <h3>Your role does not include this area.</h3>
-        <p>Ask an owner or admin of this Waymark if you need access.</p>
+        <h3>{t("Your role does not include this area.")}</h3>
+        <p>{t("Ask an owner or admin of this Waymark if you need access.")}</p>
       </div>
     </div>
   );
@@ -264,4 +281,3 @@ export function PageHead({ title, desc, actions }: { title: ReactNode; desc?: Re
     </header>
   );
 }
-
