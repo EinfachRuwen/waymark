@@ -650,6 +650,8 @@ export const DE: Record<string, string> = {
 
 /** Server messages that carry values. */
 export const DE_PATTERNS: [RegExp, string][] = [
+  [/^(.+) is longer than (\d+) characters\.$/, "$1 ist länger als $2 Zeichen."],
+  [/^Slugs can be at most (\d+) characters\.$/, "Kürzel dürfen höchstens $1 Zeichen lang sein."],
   [/^(.+) already exists\.$/, "$1 existiert bereits."],
   [/^(.+) is already added\.$/, "$1 ist schon hinzugefügt."],
   [/^(.+) still has (\d+) links\. Move or delete them first\.$/, "$1 hat noch $2 Links. Verschiebe oder lösche sie zuerst."],

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { type AppEnv, type Ctx, actorOf, audit, canUseDomain, requireRole, requireScope, requireSession, throttle } from "../auth";
 import { invalidateDomains, listDomains, resolveDomain } from "../domains";
 import { HttpError } from "../errors";
-import { createLink, type LinkInput, type LinkRow, linkView, shortUrl } from "../links";
+import { checkUrl, createLink, type LinkInput, type LinkRow, linkView, shortUrl } from "../links";
 import { getSettings, invalidateSettings } from "../settings";
 import { body, csvEscape } from "./util";
 
@@ -113,6 +113,21 @@ r.post("/import/shortio/links", requireScope("links:write"), async (c) => {
   };
   for (const raw of page.links || []) {
     const item = mapShortioLink(raw);
+    // Short.io's "*" link is a catch-all for unknown paths; Waymark keeps that on the domain.
+    if (item.slug === "*") {
+      try {
+        const target = checkUrl(item.url);
+        if (!d.not_found_redirect || input.on_conflict === "overwrite") {
+          await db.run("UPDATE domains SET not_found_redirect = ? WHERE id = ?", [target, d.id]);
+          invalidateDomains();
+          out.updated++;
+        } else out.skipped++;
+      } catch (e) {
+        out.failed++;
+        out.errors.push({ slug: "*", message: (e as Error).message });
+      }
+      continue;
+    }
     try {
       const res = await createLink(db, item, {
         domain: d,
@@ -227,7 +242,7 @@ export async function publicShorten(c: Ctx) {
   if (!(await throttle(p.db, `public:${ip}`, s.public_rate_limit, 3600_000))) {
     throw new HttpError(429, "rate_limited", "Too many links from your address. Try again in an hour.");
   }
-  const { url } = await body(c, z.object({ url: z.string().min(1).max(4096) }));
+  const { url } = await body(c, z.object({ url: z.string().min(1).max(32_768) }));
   const d = await resolveDomain(p.db, s.public_shorten_domain);
   if (!d) throw new HttpError(500, "no_domain", "No domain is configured.");
   const { row } = await createLink(p.db, { url }, { domain: d, userId: null, via: "public" });

@@ -59,8 +59,17 @@ export const RESERVED = ["_", "api", ".well-known", "favicon.ico", "robots.txt",
 
 const BLOCKED_SCHEMES = ["javascript:", "data:", "vbscript:", "file:", "blob:", "about:"];
 
+/** Longest destination we accept. Tracking URLs from ad platforms can get very long. */
+export const MAX_URL = 32_768;
+export const MAX_SLUG = 500;
+
 export function checkUrl(value: string, field = "url"): string {
-  const v = value.trim();
+  let v = value.trim();
+  // "www.example.com/page" or "//example.com" without a scheme: assume https.
+  if (v.startsWith("//")) v = "https:" + v;
+  else if (!/^[a-z][a-z0-9+.-]*:/i.test(v) && /^[^\s/]+\.[^\s/]+/.test(v)) v = "https://" + v;
+  // Common typos such as "https//example.com" or "https:/example.com".
+  v = v.replace(/^(https?)(?::\/?|\/\/)(?!\/)/i, (m, s) => (m === `${s}://` ? m : `${s}://`));
   let u: URL;
   try {
     u = new URL(v);
@@ -68,7 +77,7 @@ export function checkUrl(value: string, field = "url"): string {
     throw new HttpError(422, "invalid_url", `${field} is not a valid absolute URL. Include the scheme, e.g. https://`);
   }
   if (BLOCKED_SCHEMES.includes(u.protocol)) throw new HttpError(422, "invalid_url", `${field}: the ${u.protocol} scheme is not allowed.`);
-  if (v.length > 4096) throw new HttpError(422, "invalid_url", `${field} is longer than 4096 characters.`);
+  if (v.length > MAX_URL) throw new HttpError(422, "invalid_url", `${field} is longer than ${MAX_URL} characters.`);
   return v;
 }
 
@@ -77,7 +86,7 @@ const SLUG_RE = /^[\p{L}\p{N}][\p{L}\p{N}_\-.~/+]*$/u;
 export function checkSlug(slug: string): string {
   const s = slug.trim().replace(/^\/+|\/+$/g, "");
   if (!s) throw new HttpError(422, "invalid_slug", "The slug is empty.");
-  if (s.length > 120) throw new HttpError(422, "invalid_slug", "Slugs can be at most 120 characters.");
+  if (s.length > MAX_SLUG) throw new HttpError(422, "invalid_slug", `Slugs can be at most ${MAX_SLUG} characters.`);
   if (!SLUG_RE.test(s) || s.includes("//")) {
     throw new HttpError(422, "invalid_slug", "Slugs may contain letters, digits and - _ . ~ / +, and must start with a letter or digit.");
   }
@@ -117,9 +126,12 @@ const str = (max: number) =>
     .transform((s) => s.trim() || null);
 
 export const linkInput = z.object({
-  url: z.string().min(1).max(4096),
+  url: z.string().min(1).max(MAX_URL),
   domain: z.string().optional(),
-  slug: z.string().max(200).nullish(),
+  slug: z
+    .string()
+    .max(MAX_SLUG + 10)
+    .nullish(),
   title: str(300).nullish(),
   notes: str(4000).nullish(),
   tags: z.array(z.string().trim().min(1).max(48)).max(30).optional(),
@@ -128,7 +140,7 @@ export const linkInput = z.object({
   starts_at: ts.optional(),
   expires_at: ts.optional(),
   max_clicks: z.number().int().positive().nullish(),
-  expired_url: z.string().max(4096).nullish(),
+  expired_url: z.string().max(MAX_URL).nullish(),
   password: z.string().max(200).nullish(),
   cloak: z.boolean().optional(),
   forward_query: z.boolean().optional(),
@@ -146,18 +158,18 @@ export const linkInput = z.object({
       z.object({
         type: z.enum(["country", "device", "os", "language"]),
         values: z.array(z.string().trim().min(1).max(40)).min(1).max(250),
-        url: z.string().max(4096),
+        url: z.string().max(MAX_URL),
       }),
     )
     .max(50)
     .nullish(),
   variants: z
-    .array(z.object({ url: z.string().max(4096), weight: z.number().int().min(1).max(100) }))
+    .array(z.object({ url: z.string().max(MAX_URL), weight: z.number().int().min(1).max(100) }))
     .max(10)
     .nullish(),
   og_title: str(300).nullish(),
   og_description: str(1000).nullish(),
-  og_image: z.string().max(4096).nullish(),
+  og_image: z.string().max(MAX_URL).nullish(),
   external_id: z.string().max(200).nullish(),
 });
 export type LinkInput = z.infer<typeof linkInput>;

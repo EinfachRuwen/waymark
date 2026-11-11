@@ -13,7 +13,7 @@ import { body, intParam } from "./util";
 const r = new Hono<AppEnv>();
 const optionalUrl = z
   .string()
-  .max(4096)
+  .max(32_768)
   .nullish()
   .transform((v) => (v ? checkUrl(v) : null));
 

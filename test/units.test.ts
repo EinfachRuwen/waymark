@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseUa } from "../src/server/lib/ua";
 import { buildTarget } from "../src/server/redirect";
-import { checkSlug } from "../src/server/links";
+import { checkSlug, checkUrl } from "../src/server/links";
 import { mapShortioLink } from "../src/server/routes/transfer";
 import { detectMapping, mapRows, parseCsv } from "../src/web/lib/csv";
 import { hashPassword, verifyPassword } from "../src/server/lib/crypto";
@@ -44,12 +44,27 @@ describe("targets", () => {
   });
 });
 
+describe("urls", () => {
+  it("repairs missing schemes and common typos", () => {
+    expect(checkUrl("www.example.com/a b")).toBe("https://www.example.com/a b");
+    expect(checkUrl("//example.com")).toBe("https://example.com");
+    expect(checkUrl("https//example.com/x")).toBe("https://example.com/x");
+    expect(checkUrl("https:/example.com")).toBe("https://example.com");
+    expect(checkUrl("https://example.com")).toBe("https://example.com");
+    expect(checkUrl("mailto:a@b.de")).toBe("mailto:a@b.de");
+    expect(checkUrl("https://example.com/?q=" + "x".repeat(10_000)).length).toBeGreaterThan(10_000);
+    expect(() => checkUrl("javascript:alert(1)")).toThrow();
+    expect(() => checkUrl("not a url")).toThrow();
+  });
+});
+
 describe("slugs", () => {
   it("accepts paths and unicode, rejects reserved", () => {
     expect(checkSlug("/summer/2026/")).toBe("summer/2026");
     expect(checkSlug("grüße")).toBe("grüße");
     expect(() => checkSlug("api/x")).toThrow();
     expect(() => checkSlug("-x")).toThrow();
+    expect(checkSlug("a" + "-b".repeat(100))).toHaveLength(201);
     expect(() => checkSlug("a b")).toThrow();
   });
 });

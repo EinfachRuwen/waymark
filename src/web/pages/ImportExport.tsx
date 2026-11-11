@@ -6,7 +6,7 @@ import { api } from "../lib/api";
 import { detectMapping, detectSource, FIELDS, mapRows, parseCsv, type Field as F } from "../lib/csv";
 import { num } from "../lib/format";
 import { useSession } from "../lib/session";
-import { t, tn } from "../lib/i18n";
+import { t, tn, tError } from "../lib/i18n";
 
 type Tab = "shortio" | "csv" | "backup" | "export";
 
@@ -58,7 +58,7 @@ function Summary({ tot, running, done, total }: { tot: Totals; running: boolean;
           <ul style={{ fontSize: 12.5, maxHeight: 200, overflow: "auto", margin: "8px 0 0", paddingLeft: 18 }}>
             {tot.errors.map((e, i) => (
               <li key={i}>
-                <code>{e.slug ?? "?"}</code> — {e.message}
+                <code>{e.slug ?? "?"}</code> — {tError(e.message)}
               </li>
             ))}
           </ul>
