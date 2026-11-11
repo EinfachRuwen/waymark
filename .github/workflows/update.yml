@@ -1,0 +1,36 @@
+# Keeps a copy of Waymark (for example one made with the "Deploy to Cloudflare"
+# button) up to date. Once a day it pulls the latest version and pushes it to
+# this repository's default branch; Cloudflare then deploys it automatically.
+# Your wrangler.jsonc is never overwritten.
+name: Update Waymark
+
+on:
+  schedule:
+    - cron: "37 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    # Does nothing in the original repository.
+    if: github.repository != 'EinfachRuwen/waymark'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Optional: a token with "workflow" permission also updates files in .github/workflows.
+          token: ${{ secrets.WAYMARK_UPDATE_TOKEN || github.token }}
+      - name: Pull the latest Waymark
+        env:
+          UPSTREAM: ${{ vars.WAYMARK_UPSTREAM || 'EinfachRuwen/waymark' }}
+          # Extra paths to keep, separated by spaces, e.g. "src/web/public/logo.svg".
+          EXTRA_KEEP: ${{ vars.WAYMARK_KEEP || '' }}
+          CAN_UPDATE_WORKFLOWS: ${{ secrets.WAYMARK_UPDATE_TOKEN != '' && '1' || '0' }}
+        # Always uses the newest updater, so copies made before it existed work too.
+        run: |
+          curl -fsSL "https://raw.githubusercontent.com/${UPSTREAM}/main/scripts/sync-upstream.sh" -o "$RUNNER_TEMP/sync.sh"
+          bash "$RUNNER_TEMP/sync.sh"
+      - name: Push
+        run: git push origin HEAD:${{ github.event.repository.default_branch }}

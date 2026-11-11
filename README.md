@@ -132,6 +132,18 @@ On hosts without a persistent disk, use [Turso](https://turso.tech):
 DATABASE_URL=libsql://your-db.turso.io DATABASE_AUTH_TOKEN=… npm start
 ```
 
+### Updates
+
+Copies made with the **Deploy to Cloudflare** button are independent repositories, not forks, so they do not receive new versions on their own. Each copy contains the workflow [`.github/workflows/update.yml`](.github/workflows/update.yml): once a day it pulls the latest Waymark into your repository, and Cloudflare deploys the new commit.
+
+- **Run it now:** your repository → Actions → *Update Waymark* → Run workflow.
+- **Copy made before November 11, 2026?** It does not have the workflow yet. Add it once: in your repository choose Add file → Create new file, name it `.github/workflows/update.yml`, paste the [content of this file](https://raw.githubusercontent.com/EinfachRuwen/waymark/main/.github/workflows/update.yml) and commit.
+- **Kept on update:** `wrangler.jsonc` (your database binding) and everything in `.github/workflows`. Other files are replaced by the new version. To keep more, add a repository variable `WAYMARK_KEEP` with paths separated by spaces.
+- **Workflow files too:** add a secret `WAYMARK_UPDATE_TOKEN`, a fine-grained token for this repository with *Contents* and *Workflows* write access. Without it, the default token may not change workflow files.
+- Cloudflare deploys on every push to the default branch when the Worker is connected to the repository (Worker → Settings → Builds). The button sets this up.
+- GitHub pauses scheduled workflows after 60 days without activity in a repository. If that happens, run it once by hand.
+- Docker: `docker compose pull && docker compose up -d`.
+
 ## Configuration
 
 Almost everything is set in the app under **Settings**. Environment variables:

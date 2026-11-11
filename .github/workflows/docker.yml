@@ -11,6 +11,8 @@ permissions:
 
 jobs:
   image:
+    # Only the original repository publishes the image.
+    if: github.repository == 'EinfachRuwen/waymark'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
