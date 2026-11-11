@@ -1,0 +1,32 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "waymark",
+  "main": "src/server/entry/worker.ts",
+  "compatibility_date": "2026-09-01",
+  // The admin UI is a static bundle served for free by Workers Static Assets.
+  // Only redirects and API calls run the Worker.
+  "assets": {
+    "directory": "dist/client",
+    "binding": "ASSETS",
+    "not_found_handling": "none",
+    "html_handling": "auto-trailing-slash"
+  },
+  // `wrangler deploy` (and the Deploy to Cloudflare button) creates this D1
+  // database automatically when database_id is left out. Tables are created on
+  // the first request, there is no manual migration step.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "waymark"
+    }
+  ],
+  // Daily housekeeping: click retention, expired sessions, login throttles.
+  "triggers": {
+    "crons": ["17 3 * * *"]
+  },
+  "observability": {
+    "enabled": true
+  }
+  // Optional: protect the first-run setup screen with a token.
+  //   npx wrangler secret put SETUP_TOKEN
+}

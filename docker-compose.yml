@@ -1,0 +1,19 @@
+# docker compose up -d   →   http://localhost:8787/_/
+services:
+  waymark:
+    image: ghcr.io/einfachruwen/waymark:latest
+    # or build it yourself:
+    # build: .
+    restart: unless-stopped
+    ports:
+      - "8787:8787"
+    volumes:
+      - waymark-data:/data
+    environment:
+      # Protects the first-run setup screen. Remove after you created the owner.
+      SETUP_TOKEN: "change-me"
+      # Set to 0 if Waymark is NOT behind a reverse proxy, so X-Forwarded-For is ignored.
+      TRUST_PROXY: "1"
+
+volumes:
+  waymark-data:
