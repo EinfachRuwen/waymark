@@ -900,6 +900,12 @@ footer nav {
 footer a {
   text-decoration: none;
 }
+footer .legal {
+  flex-basis: 100%;
+  font-size: 13px;
+  max-width: 90ch;
+  margin-top: 8px;
+}
 footer a:hover {
   color: var(--on-spruce);
 }

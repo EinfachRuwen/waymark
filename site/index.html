@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Waymark · Your own link shortener</title>
-    <meta name="description" content="Waymark is an open-source alternative to Short.io: branded short links, geo and device targeting, QR codes and privacy-friendly analytics on your own domain. Runs free on Cloudflare or any server." />
+    <meta name="description" content="Waymark is an open-source, self-hosted link shortener: branded short links, geo and device targeting, QR codes and privacy-friendly analytics on your own domain. Runs free on Cloudflare or any server." />
     <meta name="theme-color" content="#1c2a22" />
     <meta property="og:title" content="Waymark · Your own link shortener" />
     <meta property="og:description" content="Branded short links, targeting, QR codes and analytics on your domain. Free on Cloudflare or any server. Open source." />
@@ -40,8 +40,8 @@
         <div class="wrap hero-grid">
           <div class="hero-copy">
             <h1 data-de-html="Dein eigener Link-Kürzer. <em>Gratis betrieben.</em> Für immer deiner.">Your own link shortener. <em>Free to run.</em> Yours to keep.</h1>
-            <p class="lead" data-de-html="Waymark ist eine quelloffene Alternative zu Short.io: <b>Kurzlinks auf deiner Domain</b> mit Weiterleitung nach Land und Gerät, QR-Codes, Statistik, Team und API. Läuft kostenlos auf Cloudflare oder auf jedem Server.">
-              Waymark is an open-source alternative to Short.io: <b>short links on your own domain</b> with country and device routing, QR codes, analytics, a team and an API. It runs free on Cloudflare or on any server.
+            <p class="lead" data-de-html="Waymark ist eine quelloffene Alternative zu gehosteten Diensten wie Short.io: <b>Kurzlinks auf deiner Domain</b> mit Weiterleitung nach Land und Gerät, QR-Codes, Statistik, Team und API. Läuft kostenlos auf Cloudflare oder auf jedem Server.">
+              Waymark is an open-source alternative to hosted services like Short.io: <b>short links on your own domain</b> with country and device routing, QR codes, analytics, a team and an API. It runs free on Cloudflare or on any server.
             </p>
             <div class="ctas">
               <a class="btn primary" href="https://deploy.workers.cloudflare.com/?url=https://github.com/EinfachRuwen/waymark">
@@ -160,7 +160,7 @@
       <section id="features">
         <div class="wrap">
           <div class="section-head reveal">
-            <h2 data-de="Alles, was Short.io kann. Und ein paar Dinge mehr.">Everything you use in Short.io. And a few things more.</h2>
+            <h2 data-de="Alles, was ein Link-Kürzer braucht. Unter deiner Kontrolle.">Everything a link shortener needs. Under your control.</h2>
             <p data-de="Waymark ist privat: Niemand kann sich selbst registrieren. Der Owner lädt sein Team ein und vergibt API-Keys mit genau den Rechten, die gebraucht werden.">
               Waymark is private: nobody can sign up on their own. The owner invites the team and hands out API keys with exactly the permissions they need.
             </p>
@@ -287,7 +287,7 @@
                 <tr><th data-de="Kosten">Cost</th><td class="yes" data-de="0 € im kostenlosen Tarif oder auf eigener Hardware">€0 on a free plan or your own hardware</td><td data-de="Viele Funktionen nur im Abo, je nach Anbieter und Tarif">Many features need a subscription, depending on provider and plan</td></tr>
                 <tr><th data-de="Wenn der Dienst eingestellt wird">If the service shuts down</th><td class="yes" data-de="Kann nicht passieren: Der Code gehört dir">It can’t: you have the code</td><td data-de="Links hängen vom Anbieter ab">Links depend on the provider</td></tr>
                 <tr><th data-de="Statistik ohne IP-Adressen">Analytics without IP addresses</th><td class="yes" data-de="Ja, gesalzener Tages-Hash">Yes, salted daily hash</td><td data-de="Je nach Anbieter">Depends on the provider</td></tr>
-                <tr><th data-de="Quelltext">Source code</th><td class="yes" data-de="Offen, MIT-Lizenz">Open, MIT license</td><td data-de="Geschlossen">Closed</td></tr>
+                <tr><th data-de="Quelltext">Source code</th><td class="yes" data-de="Offen, MIT-Lizenz">Open, MIT license</td><td data-de="Meist geschlossen">Usually closed</td></tr>
               </tbody>
             </table>
           </div>
@@ -297,16 +297,16 @@
       <section class="on-spruce" id="move">
         <div class="wrap">
           <div class="section-head reveal">
-            <h2 data-de="Von Short.io umziehen, ohne dass ein Link bricht.">Move from Short.io without breaking a link.</h2>
-            <p data-de="Waymark liest deine Links direkt über die Short.io-API – Ziele, Kürzel, Tags, Ablauf, Regeln für iOS und Android, UTM-Werte.">
-              Waymark reads your links straight from the Short.io API: destinations, slugs, tags, expiry, iOS and Android targets, UTM values.
+            <h2 data-de="Von Short.io umziehen und deine Links behalten.">Move from Short.io and keep your links.</h2>
+            <p data-de="Waymark liest deine Links direkt über die Short.io-API: Ziele, Kürzel, Tags, Ablauf, Regeln für iOS und Android, UTM-Werte. Passwörter und Geo-Regeln liefert die API nicht; die setzt du danach neu.">
+              Waymark reads your links straight from the Short.io API: destinations, slugs, tags, expiry, iOS and Android targets, UTM values. The API does not return passwords or geo rules; set those again afterwards.
             </p>
           </div>
           <ol class="steps">
             <li class="reveal"><h3 data-de="Domain hinzufügen">Add the domain</h3><p data-de="Die alte Kurz-Domain unter Domains eintragen.">Enter your old short domain under Domains.</p></li>
             <li class="reveal"><h3 data-de="Importieren">Import</h3><p data-de="API-Key von Short.io einfügen, Domain wählen, starten.">Paste a Short.io API key, pick the domain, start.</p></li>
             <li class="reveal"><h3 data-de="Prüfen">Check</h3><p data-de="Ein paar Links über den Waymark-Hostnamen testen.">Test a few links on the Waymark hostname.</p></li>
-            <li class="reveal"><h3 data-de="DNS umstellen">Switch DNS</h3><p data-de="Domain auf Waymark zeigen lassen. Alle Links funktionieren weiter.">Point the domain at Waymark. Every link keeps working.</p></li>
+            <li class="reveal"><h3 data-de="DNS umstellen">Switch DNS</h3><p data-de="Domain auf Waymark zeigen lassen. Die importierten Links funktionieren unter derselben Adresse weiter.">Point the domain at Waymark. Imported links keep working at the same address.</p></li>
           </ol>
         </div>
       </section>
@@ -352,6 +352,7 @@ npm run deploy</pre>
           <a href="https://github.com/EinfachRuwen/waymark/blob/main/docs/API.md" data-de="API">API</a>
           <a href="https://github.com/EinfachRuwen/waymark/issues" data-de="Fehler melden">Report an issue</a>
         </nav>
+        <p class="legal" data-de="Short.io, Bitly und die anderen hier genannten Dienste sind Marken ihrer jeweiligen Inhaber. Waymark ist ein unabhängiges Open-Source-Projekt und steht in keiner Verbindung zu ihnen, wird von ihnen weder unterstützt noch empfohlen. Die Namen werden nur genannt, um Kompatibilität und Importe zu beschreiben.">Short.io, Bitly and the other services named here are trademarks of their respective owners. Waymark is an independent open-source project and is not affiliated with, sponsored or endorsed by any of them. Names are used only to describe compatibility and imports.</p>
       </div>
     </footer>
 

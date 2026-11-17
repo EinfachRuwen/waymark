@@ -2,7 +2,7 @@
 
 **English** · [Deutsch](README.de.md) · [Project site](https://einfachruwen.github.io/waymark/)
 
-**A private, self-hosted link shortener: a full Short.io alternative you own.**
+**A private, self-hosted link shortener: an open-source alternative to hosted services like Short.io, on infrastructure you control.**
 Branded short links, geo and device targeting, A/B splits, password and expiry rules, QR codes, privacy-friendly analytics, a team with roles, scoped API keys and signed webhooks. It runs for free on Cloudflare Workers + D1, or anywhere Docker or Node runs, with a SQLite file.
 
 ![Overview](docs/screenshots/overview.png)
@@ -206,5 +206,8 @@ Layout: `src/server` (Hono app, redirect path, API routes, storage adapters, ent
 Die vollständige deutsche Anleitung steht in [README.de.md](README.de.md). The admin UI and the visitor pages are available in English and German; the language follows the browser and can be switched in the sidebar.
 
 ## License
+
+Short.io, Bitly and the other services named here are trademarks of their respective owners. Waymark is an independent open-source project and is not affiliated with, sponsored or endorsed by any of them. Names are used only to describe compatibility and imports.
+
 
 MIT. Archivo and JetBrains Mono are under the SIL Open Font License (see `src/web/public/fonts`).
