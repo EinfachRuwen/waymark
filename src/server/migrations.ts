@@ -157,6 +157,39 @@ CREATE TABLE IF NOT EXISTS throttle (
 );
 `,
   },
+  {
+    id: 2,
+    name: "oauth_and_mcp",
+    sql: `
+ALTER TABLE api_keys ADD COLUMN kind TEXT NOT NULL DEFAULT 'key';
+ALTER TABLE api_keys ADD COLUMN client_id TEXT;
+ALTER TABLE api_keys ADD COLUMN refresh_hash TEXT;
+ALTER TABLE api_keys ADD COLUMN refresh_expires_at INTEGER;
+CREATE UNIQUE INDEX IF NOT EXISTS api_keys_refresh ON api_keys(refresh_hash);
+
+CREATE TABLE IF NOT EXISTS oauth_clients (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  redirect_uris TEXT NOT NULL,
+  secret_hash TEXT,
+  client_uri TEXT,
+  logo_uri TEXT,
+  created_at INTEGER NOT NULL,
+  last_used_at INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS oauth_codes (
+  code_hash TEXT PRIMARY KEY,
+  client_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  redirect_uri TEXT NOT NULL,
+  scopes TEXT NOT NULL,
+  domain_ids TEXT,
+  code_challenge TEXT NOT NULL,
+  expires_at INTEGER NOT NULL
+);
+`,
+  },
 ];
 
 let applied: Promise<void> | null = null;

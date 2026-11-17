@@ -3,6 +3,7 @@ import {
   Code2,
   Globe,
   History,
+  Bot,
   KeyRound,
   Link2,
   LogOut,
@@ -32,6 +33,8 @@ import { Domains } from "./pages/Domains";
 import { TagsPage } from "./pages/Tags";
 import { Team } from "./pages/Team";
 import { ApiKeys } from "./pages/ApiKeys";
+import { Assistants } from "./pages/Assistants";
+import { Authorize } from "./pages/Authorize";
 import { Webhooks } from "./pages/Webhooks";
 import { ImportExport } from "./pages/ImportExport";
 import { SettingsPage } from "./pages/Settings";
@@ -51,6 +54,7 @@ export function App() {
   if (!state) return <div style={{ minHeight: "100vh" }} />;
   if (state.setup_required) return <Setup tokenRequired={state.setup_token_required} />;
   if (!me) return <Login instanceName={state.instance_name} />;
+  if (path === "/authorize") return <Authorize />;
   return <Shell />;
 }
 
@@ -61,6 +65,7 @@ const NAV: { to: string; label: string; icon: typeof Link2; scope?: Scope; admin
   { to: "/domains", label: t("Domains"), icon: Globe, scope: "domains:read" },
   { to: "/import", label: t("Import & export"), icon: Upload, scope: "links:write" },
   { to: "/team", label: t("Team"), icon: Users, scope: "users:read", group: t("Workspace") },
+  { to: "/assistants", label: t("AI assistants"), icon: Bot, group: t("Workspace") },
   { to: "/keys", label: t("API keys"), icon: KeyRound, group: t("Workspace") },
   { to: "/webhooks", label: t("Webhooks"), icon: Webhook, scope: "webhooks:write", group: t("Workspace") },
   { to: "/audit", label: t("Audit log"), icon: History, scope: "audit:read", group: t("Workspace") },
@@ -236,6 +241,8 @@ function Routes() {
       return guard(can("users:read"), <Team />);
     case "/keys":
       return <ApiKeys />;
+    case "/assistants":
+      return <Assistants />;
     case "/webhooks":
       return guard(can("webhooks:write"), <Webhooks />);
     case "/audit":

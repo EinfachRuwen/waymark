@@ -55,7 +55,7 @@ export interface Utm {
 }
 
 /** Path prefixes Waymark itself uses. */
-export const RESERVED = ["_", "api", ".well-known", "favicon.ico", "robots.txt", "apple-touch-icon.png"];
+export const RESERVED = ["_", "api", "mcp", ".well-known", "favicon.ico", "robots.txt", "apple-touch-icon.png"];
 
 const BLOCKED_SCHEMES = ["javascript:", "data:", "vbscript:", "file:", "blob:", "about:"];
 

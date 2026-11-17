@@ -34,7 +34,7 @@ function Contours() {
   );
 }
 
-function AuthLayout({ instance, children }: { instance: string; children: ReactNode }) {
+export function AuthLayout({ instance, children }: { instance: string; children: ReactNode }) {
   return (
     <div className="auth">
       <aside className="auth-art" aria-hidden>

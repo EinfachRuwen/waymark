@@ -48,6 +48,7 @@ Nobody can sign up. The owner creates the first account and invites everyone els
 | **Analytics** | Clicks and unique visitors over time, peak marker, countries, cities, referrers, devices, OS, browsers, languages, time of day, which rule or variant was taken, QR scans, bot filtering, CSV export, configurable retention |
 | **Team** | Owner, admin, editor, viewer roles; invite links; password reset links; disable or remove people; signed-in devices per account |
 | **API** | Every app action over HTTP; API keys with scopes, optional domain restriction and expiry; a key never exceeds its creator's role; optional CORS; reuse mode to avoid duplicates |
+| **AI assistants (MCP)** | Built-in MCP server at `/mcp` with OAuth: connect Claude, ChatGPT, Cursor and others to shorten links and read stats, each app with its own permissions and revocable access. See [docs/MCP.md](docs/MCP.md) |
 | **Webhooks** | `link.created`, `link.updated`, `link.deleted`, `link.clicked`, HMAC-SHA256 signed, test button, auto-pause after repeated failures |
 | **Import / export** | Direct Short.io import via their API, CSV import with automatic column matching (Short.io, Bitly, Rebrandly, YOURLS, Kutt, Dub, spreadsheets), click totals kept, full JSON backup and restore, CSV export |
 | **Languages** | English and German UI and visitor pages, picked from the browser, switchable in the sidebar |

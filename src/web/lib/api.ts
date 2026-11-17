@@ -167,6 +167,8 @@ export interface ApiKey {
   revoked_at: number | null;
   user_id: string;
   user_email: string;
+  kind: "key" | "oauth";
+  client_id: string | null;
 }
 
 export interface Webhook {

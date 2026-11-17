@@ -11,6 +11,8 @@ import auth from "./routes/auth";
 import links from "./routes/links";
 import transfer, { publicShorten } from "./routes/transfer";
 import type { Db } from "./db";
+import { handleMcp } from "./mcp";
+import { authorizationServerMetadata, cleanupOAuth, oauthConsent, oauthPublic, protectedResourceMetadata } from "./oauth";
 
 const SPA_HEADERS = {
   "content-security-policy":
@@ -75,6 +77,7 @@ export function createApp(getPlatform: (c: Ctx) => Platform) {
 
   api.post("/public/shorten", (c) => publicShorten(c));
   api.use("*", loadActor);
+  api.route("/", oauthConsent);
   api.route("/", auth);
   api.route("/", links);
   api.route("/", analytics);
@@ -89,6 +92,43 @@ export function createApp(getPlatform: (c: Ctx) => Platform) {
   });
 
   // Admin single-page app. Files are served by the platform; unknown paths get index.html.
+  /* ───────── MCP and OAuth for AI assistants ───────── */
+  // Bearer tokens only, never cookies, so these endpoints are open to any origin.
+  const openCors = {
+    "access-control-allow-origin": "*",
+    "access-control-allow-methods": "GET, POST, DELETE, OPTIONS",
+    "access-control-allow-headers": "authorization, content-type, mcp-protocol-version, mcp-session-id, last-event-id",
+    "access-control-expose-headers": "www-authenticate, mcp-session-id",
+    "access-control-max-age": "86400",
+  };
+  for (const path of ["/mcp", "/oauth/*", "/.well-known/*"]) app.options(path, (c) => c.body(null, 204, openCors));
+  const wellKnown = (body: (c: Ctx) => unknown) => (c: Ctx) => c.json(body(c), 200, { ...openCors, "cache-control": "public, max-age=3600" });
+  app.get("/.well-known/oauth-protected-resource", wellKnown(protectedResourceMetadata));
+  app.get("/.well-known/oauth-protected-resource/mcp", wellKnown(protectedResourceMetadata));
+  app.get("/.well-known/oauth-authorization-server", wellKnown(authorizationServerMetadata));
+  app.get("/.well-known/oauth-authorization-server/mcp", wellKnown(authorizationServerMetadata));
+  app.get("/.well-known/openid-configuration", wellKnown(authorizationServerMetadata));
+  app.use("/oauth/*", async (c, next) => {
+    await next();
+    for (const [k, v] of Object.entries(openCors)) c.res.headers.set(k, v);
+  });
+  app.route("/oauth", oauthPublic);
+  app.post("/mcp", (c) => {
+    let ctx: Parameters<typeof app.fetch>[2];
+    try {
+      ctx = c.executionCtx as Parameters<typeof app.fetch>[2];
+    } catch {
+      ctx = undefined;
+    }
+    return handleMcp(c, (req) => Promise.resolve(app.fetch(req, c.env, ctx)));
+  });
+  app.on(["GET", "DELETE"], "/mcp", (c) =>
+    c.json({ jsonrpc: "2.0", id: null, error: { code: -32000, message: "Waymark's MCP endpoint is stateless: send JSON-RPC with POST." } }, 405, {
+      ...openCors,
+      allow: "POST",
+    }),
+  );
+
   app.get("/_", (c) => c.redirect("/_/", 301));
   app.get("/_/*", async (c) => {
     const p = c.get("platform");
@@ -125,6 +165,7 @@ export async function housekeeping(db: Db) {
     await db.run("DELETE FROM clicks WHERE ts < ?", [now - s.click_retention_days * 864e5]);
   }
   await db.run("DELETE FROM sessions WHERE expires_at < ?", [now]);
+  await cleanupOAuth(db);
   await db.run("DELETE FROM throttle WHERE window_start < ?", [now - 864e5]);
   await db.run("DELETE FROM audit_log WHERE ts < ?", [now - 730 * 864e5]);
 }

@@ -39,8 +39,9 @@ export function ApiKeys() {
     void reload();
   }
 
-  const active = data?.data.filter((k) => !k.revoked_at) ?? [];
-  const revoked = data?.data.filter((k) => k.revoked_at) ?? [];
+  const keys = data?.data.filter((k) => k.kind !== "oauth") ?? [];
+  const active = keys.filter((k) => !k.revoked_at);
+  const revoked = keys.filter((k) => k.revoked_at);
 
   return (
     <div className="page">

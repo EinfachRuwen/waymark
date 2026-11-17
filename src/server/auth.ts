@@ -26,6 +26,9 @@ export interface KeyRow {
   domain_ids: string | null;
   expires_at: number | null;
   revoked_at: number | null;
+  /** "key" for API keys, "oauth" for apps connected through OAuth (MCP clients). */
+  kind?: string;
+  client_id?: string | null;
 }
 
 export type Actor =
@@ -191,7 +194,11 @@ export async function clearThrottle(db: Db, key: string) {
 export async function audit(c: Ctx, action: string, targetType: string | null, targetId: string | null, detail?: unknown) {
   const a = c.get("actor");
   const p = c.get("platform");
-  const label = a ? (a.type === "key" ? `${a.key.name} (key, ${a.user.email})` : a.user.email) : "anonymous";
+  const label = a
+    ? a.type === "key"
+      ? `${a.key.name} (${a.key.kind === "oauth" ? "app" : "key"}, ${a.user.email})`
+      : a.user.email
+    : "anonymous";
   p.waitUntil(
     p.db
       .run("INSERT INTO audit_log (ts, actor_type, actor_id, actor_label, action, target_type, target_id, detail, ip) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", [

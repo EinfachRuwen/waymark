@@ -269,7 +269,7 @@ r.get("/api-keys", requireSession, async (c) => {
   const a = actorOf(c);
   const all = a.user.role === "owner" || a.user.role === "admin";
   const rows = await c.get("platform").db.all<Record<string, unknown>>(
-    `SELECT k.id, k.name, k.prefix, k.scopes, k.domain_ids, k.expires_at, k.last_used_at, k.created_at, k.revoked_at, k.user_id, u.email AS user_email
+    `SELECT k.id, k.name, k.prefix, k.scopes, k.domain_ids, CASE WHEN k.kind = 'oauth' THEN k.refresh_expires_at ELSE k.expires_at END AS expires_at, k.last_used_at, k.created_at, k.revoked_at, k.user_id, k.kind, k.client_id, u.email AS user_email
      FROM api_keys k JOIN users u ON u.id = k.user_id ${all ? "" : "WHERE k.user_id = ?"} ORDER BY k.revoked_at IS NOT NULL, k.created_at DESC`,
     all ? [] : [a.user.id],
   );
