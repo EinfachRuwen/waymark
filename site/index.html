@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Waymark · Your own link shortener</title>
+    <meta name="description" content="Waymark is an open-source alternative to Short.io: branded short links, geo and device targeting, QR codes and privacy-friendly analytics on your own domain. Runs free on Cloudflare or any server." />
+    <meta name="theme-color" content="#1c2a22" />
+    <meta property="og:title" content="Waymark · Your own link shortener" />
+    <meta property="og:description" content="Branded short links, targeting, QR codes and analytics on your domain. Free on Cloudflare or any server. Open source." />
+    <meta property="og:image" content="https://einfachruwen.github.io/waymark/img/social.png" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="preload" href="fonts/archivo.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="site.css" />
+    <script>document.documentElement.classList.add("js");</script>
+  </head>
+  <body>
+    <header class="nav">
+      <div class="wrap">
+        <a class="brand" href="./">
+          <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3 2v12M3 3h8l-2 3 2 3H3" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" /></svg></span>
+          Waymark
+        </a>
+        <a class="link" href="#features" data-de="Funktionen">Features</a>
+        <a class="link" href="#hosting" data-de="Hosting">Hosting</a>
+        <a class="link" href="#start" data-de="Installieren">Install</a>
+        <a class="link" href="https://github.com/EinfachRuwen/waymark">GitHub</a>
+        <div class="lang" role="group" aria-label="Language">
+          <button type="button" data-lang="en" aria-pressed="true">EN</button>
+          <button type="button" data-lang="de" aria-pressed="false">DE</button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero" style="padding-bottom: 0">
+        <canvas class="contours" aria-hidden="true"></canvas>
+        <div class="wrap hero-grid">
+          <div class="hero-copy">
+            <h1 data-de-html="Dein eigener Link-Kürzer. <em>Gratis betrieben.</em> Für immer deiner.">Your own link shortener. <em>Free to run.</em> Yours to keep.</h1>
+            <p class="lead" data-de-html="Waymark ist eine quelloffene Alternative zu Short.io: <b>Kurzlinks auf deiner Domain</b> mit Weiterleitung nach Land und Gerät, QR-Codes, Statistik, Team und API. Läuft kostenlos auf Cloudflare oder auf jedem Server.">
+              Waymark is an open-source alternative to Short.io: <b>short links on your own domain</b> with country and device routing, QR codes, analytics, a team and an API. It runs free on Cloudflare or on any server.
+            </p>
+            <div class="ctas">
+              <a class="btn primary" href="https://deploy.workers.cloudflare.com/?url=https://github.com/EinfachRuwen/waymark">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                <span data-de="Auf Cloudflare deployen">Deploy to Cloudflare</span>
+              </a>
+              <a class="btn line" href="https://github.com/EinfachRuwen/waymark">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.56-.29-5.25-1.28-5.25-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.43-2.7 5.4-5.27 5.69.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z" /></svg>
+                <span data-de="Auf GitHub ansehen">View on GitHub</span>
+              </a>
+            </div>
+            <p class="note" data-de="MIT-Lizenz · keine Tracker · Deutsch und Englisch">MIT licensed · no trackers · English and German</p>
+          </div>
+
+          <div class="post" aria-label="A signpost with four short links" data-de-aria="Ein Wegweiser mit vier Kurzlinks">
+            <div class="pole"></div>
+            <div class="arm right" style="top: 70px; --d: 120ms; --r: -5deg">
+              <span class="sign"><span class="host">go.example.com/</span>spring</span>
+              <span class="dest">example.com/collection/spring-2026?utm_source=print</span>
+            </div>
+            <div class="arm left" style="top: 160px; --d: 260ms; --r: 5deg; --x: 10px">
+              <span class="sign left">app</span>
+              <span class="dest" data-de="iPhone → App Store · Android → Play Store">iPhone → App Store · Android → Play</span>
+            </div>
+            <div class="arm right" style="top: 250px; --d: 400ms; --r: -4deg">
+              <span class="sign">menu</span>
+              <span class="dest" data-de="QR-Code auf jedem Tisch · 1.284 Scans">QR code on every table · 1,284 scans</span>
+            </div>
+            <div class="arm left" style="top: 340px; --d: 540ms; --r: 4deg; --x: 10px">
+              <span class="sign left ghost">jobs</span>
+              <span class="dest" data-de="abgelaufen am 31. Dez. → /karriere">expired Dec 31 → /careers</span>
+            </div>
+            <div class="blaze-mark" aria-hidden="true"></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="try">
+        <div class="wrap try-grid">
+          <div>
+            <h2 data-de="Probier es aus">Try the idea</h2>
+            <p data-de="Füge eine lange URL ein. So würde sie auf deiner Domain aussehen.">Paste a long URL and see what it becomes on your domain.</p>
+          </div>
+          <div>
+            <form id="try" autocomplete="off">
+              <input id="try-url" type="url" placeholder="https://example.com/a/very/long/link?utm_campaign=…" aria-label="Long URL" data-de-aria="Lange URL" />
+              <button class="btn primary" type="submit" data-de="Kürzen">Shorten</button>
+            </form>
+            <div class="result" aria-live="polite">
+              <span class="sign small" id="try-sign"><span class="host">go.your-domain.com/</span>spring</span>
+              <span class="arrow" aria-hidden="true">→</span>
+              <span class="long" id="try-long">example.com/collection/spring-2026?utm_source=print</span>
+              <span class="saved" id="try-saved"></span>
+            </div>
+            <small data-de="Nur eine Vorschau in deinem Browser. Es wird nichts gespeichert oder gesendet.">A preview in your browser only. Nothing is stored or sent.</small>
+          </div>
+        </div>
+      </div>
+
+      <section id="routes">
+        <div class="wrap">
+          <div class="section-head reveal">
+            <h2 data-de="Ein Link, viele Wege.">One link, many routes.</h2>
+            <p data-de="Ein Kurzlink ist bei Waymark ein Wegweiser mit Regeln. Wer klickt, landet dort, wo es für ihn Sinn ergibt, und du siehst, welcher Weg wie oft genommen wurde.">
+              In Waymark a short link is a signpost with rules. Each visitor lands where it makes sense for them, and you see which route was taken how often.
+            </p>
+          </div>
+          <div class="routes">
+            <div class="route-map reveal" aria-label="Example route of one short link" data-de-aria="Beispielroute eines Kurzlinks">
+              <div class="stop start"><div class="when" data-de="Kurzlink">Short link</div><div class="to">go.example.com/spring</div></div>
+              <div class="stop"><div class="when" data-de="Besucher aus Deutschland, Österreich, Schweiz">Visitors from Germany, Austria, Switzerland</div><div class="to">example.com/de/fruehling</div></div>
+              <div class="stop"><div class="when" data-de="Auf iOS">On iOS</div><div class="to">apps.apple.com/app/example</div></div>
+              <div class="stop"><div class="when"><span data-de="A/B-Test">A/B test</span> <span class="pct">50%</span></div><div class="to">example.com/spring-b</div></div>
+              <div class="stop end"><div class="when"><span data-de="Alle anderen">Everyone else</span> <span class="pct">50%</span></div><div class="to">example.com/spring?utm_source=print</div></div>
+            </div>
+            <div class="route-list">
+              <div class="reveal">
+                <h3 data-de="Nach Land, Gerät, System und Sprache">By country, device, OS and language</h3>
+                <p data-de="Die erste passende Regel gewinnt. Mit einem Klick entsteht ein App-Store-Paar für iPhone und Android.">The first matching rule wins. One click creates an App Store pair for iPhone and Android.</p>
+              </div>
+              <div class="reveal">
+                <h3 data-de="Mit Ablaufdatum, Klicklimit und Passwort">With expiry, click limits and passwords</h3>
+                <p data-de="Links starten zu einem Zeitpunkt, enden nach einem Datum oder nach so vielen Aufrufen und schicken danach auf eine Ersatzseite.">Links start at a set time, stop after a date or a number of visits, and send people to a fallback page afterwards.</p>
+              </div>
+              <div class="reveal">
+                <h3 data-de="Mit eigener Vorschau beim Teilen">With your own preview when shared</h3>
+                <p data-de="Titel, Text und Bild für WhatsApp, Slack, LinkedIn und Co. – unabhängig von der Zielseite.">Title, text and image for WhatsApp, Slack, LinkedIn and others, independent of the destination page.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="on-spruce screens" id="screens">
+        <div class="wrap">
+          <div class="section-head reveal">
+            <h2 data-de="Die App, wie sie ist.">The app, as it is.</h2>
+            <p data-de="Keine Mockups: Das sind Screenshots der echten Oberfläche mit Demodaten. Klicks erscheinen als Höhenprofil, Kurzlinks als Wegweiser.">
+              Not mockups: these are screenshots of the real interface with demo data. Clicks show up as an elevation profile, short links as signposts.
+            </p>
+          </div>
+          <div class="tabs" role="tablist">
+            <button role="tab" aria-selected="true" data-shot="overview" data-de="Übersicht">Overview</button>
+            <button role="tab" aria-selected="false" data-shot="links" data-de="Links">Links</button>
+            <button role="tab" aria-selected="false" data-shot="link-detail" data-de="Link-Details">Link detail</button>
+            <button role="tab" aria-selected="false" data-shot="editor-targeting" data-de="Regeln">Rules</button>
+            <button role="tab" aria-selected="false" data-shot="dark-overview" data-de="Dunkel">Dark</button>
+          </div>
+          <figure class="frame" style="margin: 0">
+            <div class="bar" aria-hidden="true"><i></i><i></i><i></i><span>go.your-domain.com/_/</span></div>
+            <img id="shot" src="img/overview.png" alt="Waymark overview with clicks over time and top links" width="1360" height="860" />
+          </figure>
+        </div>
+      </section>
+
+      <section id="features">
+        <div class="wrap">
+          <div class="section-head reveal">
+            <h2 data-de="Alles, was Short.io kann. Und ein paar Dinge mehr.">Everything you use in Short.io. And a few things more.</h2>
+            <p data-de="Waymark ist privat: Niemand kann sich selbst registrieren. Der Owner lädt sein Team ein und vergibt API-Keys mit genau den Rechten, die gebraucht werden.">
+              Waymark is private: nobody can sign up on their own. The owner invites the team and hands out API keys with exactly the permissions they need.
+            </p>
+          </div>
+          <div class="features">
+            <div class="feature-group reveal">
+              <h3 data-de="Links">Links</h3>
+              <ul>
+                <li data-de="Eigene oder zufällige Kürzel, auch mit Pfad und Umlauten">Custom or random slugs, with paths and Unicode</li>
+                <li data-de="Beliebig viele eigene Domains">Any number of branded domains</li>
+                <li data-de="Tags, Notizen, Archiv, Sammelaktionen">Tags, notes, archive, bulk actions</li>
+                <li data-de="Weiterleitung 301, 302, 307 oder 308, Cloaking">301, 302, 307 or 308 redirects, cloaking</li>
+              </ul>
+            </div>
+            <div class="feature-group reveal" style="--c: var(--sky)">
+              <h3 data-de="Weiterleitung">Routing</h3>
+              <ul>
+                <li data-de="Regeln nach Land, Gerät, System, Sprache">Rules by country, device, OS, language</li>
+                <li data-de="A/B-Tests mit Gewichtung">A/B tests with weights</li>
+                <li data-de="UTM-Builder und durchgereichte Parameter">UTM builder and query pass-through</li>
+                <li data-de="Start, Ablauf, Klicklimit, Passwort">Start, expiry, click limit, password</li>
+              </ul>
+            </div>
+            <div class="feature-group reveal" style="--c: var(--moss)">
+              <h3 data-de="Statistik">Analytics</h3>
+              <ul>
+                <li data-de="Klicks und eindeutige Besucher im Zeitverlauf">Clicks and unique visitors over time</li>
+                <li data-de="Länder, Städte, Herkunft, Geräte, Browser, Sprachen">Countries, cities, referrers, devices, browsers, languages</li>
+                <li data-de="QR-Scans getrennt gezählt, Bots herausgefiltert">QR scans counted apart, bots filtered out</li>
+                <li data-de="Keine gespeicherten IP-Adressen">No IP addresses stored</li>
+              </ul>
+            </div>
+            <div class="feature-group reveal" style="--c: var(--ember)">
+              <h3 data-de="Team & Sicherheit">Team & security</h3>
+              <ul>
+                <li data-de="Rollen Owner, Admin, Editor, Betrachter">Owner, admin, editor and viewer roles</li>
+                <li data-de="Nur Einladungen, keine Selbstregistrierung">Invite-only, no public sign-up</li>
+                <li data-de="Protokoll aller Änderungen">Audit log of every change</li>
+                <li data-de="Abgesicherte Anmeldung, strenge CSP">Throttled sign-in, strict CSP</li>
+              </ul>
+            </div>
+            <div class="feature-group reveal" style="--c: var(--blaze)">
+              <h3 data-de="API & Webhooks">API & webhooks</h3>
+              <ul>
+                <li data-de="Alles, was die App kann, per HTTP">Everything the app does, over HTTP</li>
+                <li data-de="Keys mit Rechten, Domains und Ablaufdatum">Keys with scopes, domains and expiry</li>
+                <li data-de="Signierte Webhooks bei Änderungen und Klicks">Signed webhooks on changes and clicks</li>
+                <li data-de="Optional: öffentliches Kürzen mit Limit">Optional public shortening, rate-limited</li>
+              </ul>
+            </div>
+            <div class="feature-group reveal" style="--c: var(--ink-3)">
+              <h3 data-de="Import & Export">Import & export</h3>
+              <ul>
+                <li data-de="Direkter Import aus Short.io">Direct import from Short.io</li>
+                <li data-de="CSV aus Bitly, YOURLS, Kutt, Rebrandly, Dub">CSV from Bitly, YOURLS, Kutt, Rebrandly, Dub</li>
+                <li data-de="Komplette Sicherung als JSON">Full backup as JSON</li>
+                <li data-de="Selbst-Update für Kopien deines Repos">Self-updating copies of the repository</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="on-blaze" id="hosting">
+        <div class="wrap">
+          <div class="section-head reveal">
+            <h2 data-de="Kostenlos betreiben. Ehrlich gerechnet.">Free to run. Honestly counted.</h2>
+            <p data-de="Eine Codebasis, drei Wege. Du kannst klein auf Cloudflare anfangen und später mit einer Sicherungsdatei umziehen.">
+              One codebase, three ways to run it. Start small on Cloudflare and move later with one backup file.
+            </p>
+          </div>
+          <div class="hosting reveal">
+            <div class="plan pick">
+              <span class="tag" data-de="EMPFOHLEN ZUM START">START HERE</span>
+              <h3>Cloudflare Workers + D1</h3>
+              <div><span class="big">100,000</span> <span class="unit" data-de="Aufrufe pro Tag, gratis">requests per day, free</span></div>
+              <ul>
+                <li data-de="Kein Server, weltweit schnell, HTTPS für eigene Domains">No server, fast everywhere, HTTPS for your domains</li>
+                <li data-de="Etwa 20.000 gezählte Klicks pro Tag; danach leiten Links weiter, nur die Statistik pausiert">About 20,000 tracked clicks per day; beyond that links still redirect, only stats pause</li>
+                <li data-de="Ein Klick auf „Deploy to Cloudflare“">One click on “Deploy to Cloudflare”</li>
+              </ul>
+            </div>
+            <div class="plan">
+              <h3 data-de="Eigener Server mit Docker">Your server with Docker</h3>
+              <div><span class="big" data-de="Kein Limit">No limit</span></div>
+              <ul>
+                <li data-de="Oracle Cloud „Always Free“, Raspberry Pi oder kleiner VPS">Oracle Cloud Always Free, a Raspberry Pi or a small VPS</li>
+                <li data-de="Daten in einer SQLite-Datei">Data in one SQLite file</li>
+                <li data-de="Ein Befehl: docker compose up -d">One command: docker compose up -d</li>
+              </ul>
+            </div>
+            <div class="plan">
+              <h3 data-de="Node + Turso">Node + Turso</h3>
+              <div><span class="big">10M</span> <span class="unit" data-de="Schreibzugriffe pro Monat, gratis">writes per month, free</span></div>
+              <ul>
+                <li data-de="Für Hoster ohne eigene Festplatte">For hosts without a persistent disk</li>
+                <li data-de="Render, Koyeb, Railway und ähnliche">Render, Koyeb, Railway and similar</li>
+              </ul>
+            </div>
+          </div>
+          <p class="hosting-note" data-de="Stand der Limits: November 2026. Die Anbieter ändern sie gelegentlich; die Details stehen im README.">Limits as of November 2026. Providers change them from time to time; details are in the README.</p>
+        </div>
+      </section>
+
+      <section id="compare">
+        <div class="wrap">
+          <div class="section-head reveal">
+            <h2 data-de="Warum selbst betreiben?">Why run it yourself?</h2>
+            <p data-de="Kurzlinks landen auf Flyern, in Büchern und auf Verpackungen. Sie sollten so lange funktionieren wie das Papier, auf dem sie stehen.">
+              Short links end up on flyers, in books and on packaging. They should keep working as long as the paper they are printed on.
+            </p>
+          </div>
+          <div class="reveal" style="overflow-x: auto">
+            <table class="compare">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Waymark</th>
+                  <th data-de="Gehostete Dienste (Short.io, Bitly …)">Hosted services (Short.io, Bitly …)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><th data-de="Wo deine Daten liegen">Where your data lives</th><td class="yes" data-de="Bei dir: in deinem Cloudflare-Konto oder auf deinem Server">With you: your Cloudflare account or your server</td><td data-de="Beim Anbieter">With the provider</td></tr>
+                <tr><th data-de="Kosten">Cost</th><td class="yes" data-de="0 € im kostenlosen Tarif oder auf eigener Hardware">€0 on a free plan or your own hardware</td><td data-de="Viele Funktionen nur im Abo, je nach Anbieter und Tarif">Many features need a subscription, depending on provider and plan</td></tr>
+                <tr><th data-de="Wenn der Dienst eingestellt wird">If the service shuts down</th><td class="yes" data-de="Kann nicht passieren: Der Code gehört dir">It can’t: you have the code</td><td data-de="Links hängen vom Anbieter ab">Links depend on the provider</td></tr>
+                <tr><th data-de="Statistik ohne IP-Adressen">Analytics without IP addresses</th><td class="yes" data-de="Ja, gesalzener Tages-Hash">Yes, salted daily hash</td><td data-de="Je nach Anbieter">Depends on the provider</td></tr>
+                <tr><th data-de="Quelltext">Source code</th><td class="yes" data-de="Offen, MIT-Lizenz">Open, MIT license</td><td data-de="Geschlossen">Closed</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="on-spruce" id="move">
+        <div class="wrap">
+          <div class="section-head reveal">
+            <h2 data-de="Von Short.io umziehen, ohne dass ein Link bricht.">Move from Short.io without breaking a link.</h2>
+            <p data-de="Waymark liest deine Links direkt über die Short.io-API – Ziele, Kürzel, Tags, Ablauf, Regeln für iOS und Android, UTM-Werte.">
+              Waymark reads your links straight from the Short.io API: destinations, slugs, tags, expiry, iOS and Android targets, UTM values.
+            </p>
+          </div>
+          <ol class="steps">
+            <li class="reveal"><h3 data-de="Domain hinzufügen">Add the domain</h3><p data-de="Die alte Kurz-Domain unter Domains eintragen.">Enter your old short domain under Domains.</p></li>
+            <li class="reveal"><h3 data-de="Importieren">Import</h3><p data-de="API-Key von Short.io einfügen, Domain wählen, starten.">Paste a Short.io API key, pick the domain, start.</p></li>
+            <li class="reveal"><h3 data-de="Prüfen">Check</h3><p data-de="Ein paar Links über den Waymark-Hostnamen testen.">Test a few links on the Waymark hostname.</p></li>
+            <li class="reveal"><h3 data-de="DNS umstellen">Switch DNS</h3><p data-de="Domain auf Waymark zeigen lassen. Alle Links funktionieren weiter.">Point the domain at Waymark. Every link keeps working.</p></li>
+          </ol>
+        </div>
+      </section>
+
+      <section id="start">
+        <div class="wrap">
+          <div class="section-head reveal">
+            <h2 data-de="In fünf Minuten startklar.">Up and running in five minutes.</h2>
+            <p data-de="Nach dem Deploy öffnest du /_/ auf deiner Domain und legst das Owner-Konto an.">After deploying, open /_/ on your domain and create the owner account.</p>
+          </div>
+          <div class="start-grid">
+            <div class="start-card reveal">
+              <h3>Cloudflare</h3>
+              <p data-de="Der Button legt eine Kopie des Repos an, erstellt die Datenbank und deployt. Updates kommen jede Nacht automatisch.">The button copies the repository, creates the database and deploys. Updates arrive automatically every night.</p>
+              <a class="btn primary" href="https://deploy.workers.cloudflare.com/?url=https://github.com/EinfachRuwen/waymark" data-de="Auf Cloudflare deployen">Deploy to Cloudflare</a>
+            </div>
+            <div class="start-card reveal">
+              <h3>Docker</h3>
+              <pre><span class="c"># docker compose up -d</span>
+docker run -d -p 8787:8787 \
+  -v waymark-data:/data \
+  ghcr.io/einfachruwen/waymark</pre>
+              <a class="btn dark" href="https://github.com/EinfachRuwen/waymark#2-docker-unlimited-on-your-own-server" data-de="Anleitung">Guide</a>
+            </div>
+            <div class="start-card reveal">
+              <h3 data-de="Von Hand">By hand</h3>
+              <pre>git clone https://github.com/EinfachRuwen/waymark
+cd waymark &amp;&amp; npm install
+npm run deploy</pre>
+              <a class="btn dark" href="https://github.com/EinfachRuwen/waymark#readme" data-de="README lesen">Read the README</a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="wrap">
+        <span data-de="Waymark · MIT-Lizenz · keine Cookies, keine Tracker auf dieser Seite">Waymark · MIT license · no cookies or trackers on this page</span>
+        <nav>
+          <a href="https://github.com/EinfachRuwen/waymark">GitHub</a>
+          <a href="https://github.com/EinfachRuwen/waymark/blob/main/README.de.md" data-de="Anleitung (Deutsch)">Guide (German)</a>
+          <a href="https://github.com/EinfachRuwen/waymark/blob/main/docs/API.md" data-de="API">API</a>
+          <a href="https://github.com/EinfachRuwen/waymark/issues" data-de="Fehler melden">Report an issue</a>
+        </nav>
+      </div>
+    </footer>
+
+    <script src="site.js" defer></script>
+  </body>
+</html>

@@ -1,6 +1,6 @@
 # Waymark
 
-**English** · [Deutsch](README.de.md)
+**English** · [Deutsch](README.de.md) · [Project site](https://einfachruwen.github.io/waymark/)
 
 **A private, self-hosted link shortener: a full Short.io alternative you own.**
 Branded short links, geo and device targeting, A/B splits, password and expiry rules, QR codes, privacy-friendly analytics, a team with roles, scoped API keys and signed webhooks. It runs for free on Cloudflare Workers + D1, or anywhere Docker or Node runs, with a SQLite file.
