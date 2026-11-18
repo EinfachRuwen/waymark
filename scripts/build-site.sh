@@ -5,7 +5,7 @@ set -euo pipefail
 out="${1:-_site}"
 rm -rf "$out"
 mkdir -p "$out/fonts" "$out/img/de"
-cp site/index.html site/site.css site/site.js "$out/"
+cp site/index.html site/datenschutz.html site/site.css site/site.js "$out/"
 cp src/web/public/favicon.svg "$out/"
 cp src/web/public/fonts/*.woff2 "$out/fonts/"
 cp docs/screenshots/*.png "$out/img/"
